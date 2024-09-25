@@ -10,6 +10,12 @@ source = "assets/shaders/blueprint.lua"
 before = "game.lua"
 name = "blueprint.shader"
 
+[[patches]]
+[patches.module]
+source = "core/core.lua"
+before = "main.lua"
+name = "blueprint.core"
+
 # Add core functionality
 [[patches]]
 [patches.copy]
