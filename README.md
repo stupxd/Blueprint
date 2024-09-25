@@ -10,3 +10,6 @@
 ## Features
 Dynamically changes blueprint texture to the joker it is copying.
 
+
+## Credits
+- GoldenDiscoPig for suggesting the idea in Balatro discord.
