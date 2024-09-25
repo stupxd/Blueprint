@@ -1,4 +1,9 @@
 
+local function equal_sprites(first, second)
+    return first.atlas.name == second.atlas.name and first.sprite_pos.x == second.sprite_pos.x and first.sprite_pos.y == second.sprite_pos.y
+end
+
+
 local function align_sprite(self, card, restore)
     if restore then
         if self.blueprint_T then
@@ -21,7 +26,7 @@ local function align_sprite(self, card, restore)
 end
 
 local function blueprint_sprite(blueprint, card)
-    if blueprint.blueprint_sprite_key == card.config.center.key then
+    if equal_sprites(blueprint.children.center, card.children.center) then
         return
     end
 
@@ -29,8 +34,6 @@ local function blueprint_sprite(blueprint, card)
     if not blueprint.blueprint_sprite_copy then
         blueprint.blueprint_sprite_copy = blueprint.children.center
     end
-
-    blueprint.blueprint_sprite_key = card.config.center.key
 
     blueprint.children.center = Sprite(blueprint.T.x, blueprint.T.y, blueprint.T.w, blueprint.T.h, G.ASSET_ATLAS[card.children.center.atlas.name], card.children.center.sprite_pos)
     blueprint.children.center.states.hover = blueprint.states.hover
@@ -50,7 +53,6 @@ local function restore_sprite(blueprint)
     blueprint.children.center:remove()
     blueprint.children.center = blueprint.blueprint_sprite_copy
     blueprint.blueprint_sprite_copy = nil
-    blueprint.blueprint_sprite_key = nil
     align_sprite(blueprint, nil, true)
 end
 

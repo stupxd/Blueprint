@@ -38,6 +38,6 @@ pattern = '''
 self.children.center:draw_shader('dissolve')'''
 position = "at"
 payload = '''
-self.children.center:draw_shader(self.blueprint_sprite_key and 'blueprint_shader' or 'dissolve')
+self.children.center:draw_shader(self.blueprint_sprite_copy and 'blueprint_shader' or 'dissolve')
 '''
 match_indent = true
