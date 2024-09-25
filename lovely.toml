@@ -1,0 +1,43 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 420
+
+
+[[patches]]
+[patches.module]
+source = "assets/shaders/blueprint.lua"
+before = "game.lua"
+name = "blueprint.shader"
+
+# Add core functionality
+[[patches]]
+[patches.copy]
+target = "main.lua"
+position = "append"
+sources = [
+    "main.lua",
+]
+
+[[patches]]
+[patches.pattern]
+target = "game.lua"
+pattern = '''
+local shader_files = love.filesystem.getDirectoryItems("resources/shaders")'''
+position = "before"
+payload = '''
+
+G.SHADERS['blueprint_shader'] = love.graphics.newShader(require "blueprint.shader")
+'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = '''
+self.children.center:draw_shader('dissolve')'''
+position = "at"
+payload = '''
+self.children.center:draw_shader(self.blueprint_sprite_key and 'blueprint_shader' or 'dissolve')
+'''
+match_indent = true
