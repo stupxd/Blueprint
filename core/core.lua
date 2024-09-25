@@ -97,7 +97,9 @@ return function ()
             end
     
             -- make sure to update sprite for blueprint if it's last on the list
-            restore_sprite(previous_joker)
+            if previous_joker then
+                restore_sprite(previous_joker)
+            end
         end
     
         return ret
