@@ -44,6 +44,27 @@ pattern = '''
 self.children.center:draw_shader('dissolve')'''
 position = "at"
 payload = '''
-self.children.center:draw_shader(self.blueprint_sprite_copy and 'blueprint_shader' or 'dissolve')
+if self.blueprint_sprite_copy then
+    self.children.center:draw_shader('blueprint_shader')
+else
+    self.children.center:draw_shader('dissolve')
+end
+'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = '''
+elseif self.sprite_facing == 'back' then'''
+position = "before"
+payload = '''
+    if self.blueprint_sprite_copy and self.children.floating_sprite then
+        local scale_mod = 0.07 + 0.02*math.sin(1.8*G.TIMERS.REAL) + 0.00*math.sin((G.TIMERS.REAL - math.floor(G.TIMERS.REAL))*math.pi*14)*(1 - (G.TIMERS.REAL - math.floor(G.TIMERS.REAL)))^3
+        local rotate_mod = 0.05*math.sin(1.219*G.TIMERS.REAL) + 0.00*math.sin((G.TIMERS.REAL)*math.pi*5)*(1 - (G.TIMERS.REAL - math.floor(G.TIMERS.REAL)))^2
+
+        self.children.floating_sprite:draw_shader('blueprint_shader',   0, nil, nil, self.children.center, scale_mod, rotate_mod, nil, 0.1 + 0.03 * math.sin(1.8 * G.TIMERS.REAL), nil, 0.6)
+        self.children.floating_sprite:draw_shader('blueprint_shader', nil, nil, nil, self.children.center, scale_mod, rotate_mod)
+    end
 '''
 match_indent = true

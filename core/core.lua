@@ -57,6 +57,20 @@ local function blueprint_sprite(blueprint, card)
     blueprint.children.center.states.collide.can = false
     blueprint.children.center:set_role({major = blueprint, role_type = 'Glued', draw_major = blueprint})
 
+    if card.children.floating_sprite then
+        blueprint.children.floating_sprite = Sprite(blueprint.T.x, blueprint.T.y, blueprint.T.w, blueprint.T.h, G.ASSET_ATLAS[card.children.floating_sprite.atlas.name], card.children.floating_sprite.sprite_pos)
+        blueprint.children.floating_sprite.role.draw_major = blueprint
+        blueprint.children.floating_sprite.states.hover.can = false
+        blueprint.children.floating_sprite.states.click.can = false
+    end
+
+    --if card.children.floating_sprite2 then
+    --    blueprint.children.floating_sprite2 = Sprite(blueprint.T.x, blueprint.T.y, blueprint.T.w, blueprint.T.h, G.ASSET_ATLAS[card.children.floating_sprite2.atlas.name], card.children.floating_sprite2.sprite_pos)
+    --    blueprint.children.floating_sprite2.role.draw_major = blueprint
+    --    blueprint.children.floating_sprite2.states.hover.can = false
+    --    blueprint.children.floating_sprite2.states.click.can = false
+    --end
+
     align_sprite(blueprint, card)
 end
 
@@ -68,6 +82,17 @@ local function restore_sprite(blueprint)
     blueprint.children.center:remove()
     blueprint.children.center = blueprint.blueprint_sprite_copy
     blueprint.blueprint_sprite_copy = nil
+
+    if blueprint.children.floating_sprite then
+        blueprint.children.floating_sprite:remove()
+        blueprint.children.floating_sprite = nil
+    end
+
+    --if blueprint.children.floating_sprite2 then
+    --    blueprint.children.floating_sprite2:remove()
+    --    blueprint.children.floating_sprite2 = nil
+    --end
+
     align_sprite(blueprint, nil, true)
 end
 
