@@ -24,9 +24,9 @@ local function align_sprite(self, card, restore)
         if self.blueprint_T then
             self.T.h = self.blueprint_T.h
             self.T.w = self.blueprint_T.w
-        else
-            self.T.h = G.CARD_H
-            self.T.w = G.CARD_W
+--        else
+--            self.T.h = G.CARD_H
+--            self.T.w = G.CARD_W
         end
         return
     end
@@ -50,6 +50,14 @@ local function blueprint_sprite(blueprint, card)
         blueprint.blueprint_sprite_copy = blueprint.children.center
     end
 
+    -- Make sure to remove floating sprite before applying new one
+    if blueprint.children.floating_sprite then
+        blueprint.children.floating_sprite:remove()
+        blueprint.children.floating_sprite = nil
+    end
+
+    align_sprite(blueprint, nil, true)
+
     blueprint.children.center = Sprite(blueprint.T.x, blueprint.T.y, blueprint.T.w, blueprint.T.h, G.ASSET_ATLAS[card.children.center.atlas.name], card.children.center.sprite_pos)
     blueprint.children.center.states.hover = blueprint.states.hover
     blueprint.children.center.states.click = blueprint.states.click
@@ -70,7 +78,6 @@ local function blueprint_sprite(blueprint, card)
     --    blueprint.children.floating_sprite2.states.hover.can = false
     --    blueprint.children.floating_sprite2.states.click.can = false
     --end
-
     align_sprite(blueprint, card)
 end
 
@@ -108,6 +115,9 @@ return function ()
                 current_joker = G.jokers.cards[i]
                 if current_joker.config and current_joker.config.center and current_joker.config.center.key == 'j_blueprint' then
                     local should_copy = previous_joker and previous_joker.config.center.blueprint_compat and not current_joker.states.drag.is and (copy_when_highlighted or not current_joker.highlighted)
+                    if should_copy and current_joker.edition and not current_joker.children.floating_sprite then
+                        should_copy = false
+                    end
                     if should_copy and previous_joker.config.center.key == 'j_blueprint' and not previous_joker.blueprint_sprite_copy then
                         should_copy = false
                     end
@@ -118,7 +128,9 @@ return function ()
                         restore_sprite(current_joker)
                     end
                 end
-                previous_joker = current_joker
+                if not (current_joker.config.center.key == 'j_blueprint') then
+                    previous_joker = current_joker
+                end
             end
     
         end
