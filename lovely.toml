@@ -25,6 +25,10 @@ sources = [
     "main.lua",
 ]
 
+# 
+# Patch base game functions to allow blueprint shader to work
+# 
+
 [[patches]]
 [patches.pattern]
 target = "game.lua"
@@ -37,20 +41,20 @@ G.SHADERS['blueprint_shader'] = love.graphics.newShader(require "blueprint.shade
 '''
 match_indent = true
 
-[[patches]]
-[patches.pattern]
-target = "card.lua"
-pattern = '''
-self.children.center:draw_shader('dissolve')'''
-position = "at"
-payload = '''
-if self.blueprint_sprite_copy then
-    self.children.center:draw_shader('blueprint_shader')
-else
-    self.children.center:draw_shader('dissolve')
-end
-'''
-match_indent = true
+#[[patches]]
+#[patches.pattern]
+#target = "card.lua"
+#pattern = '''
+#self.children.center:draw_shader('dissolve')'''
+#position = "at"
+#payload = '''
+#if self.blueprint_sprite_copy and not self.edition then
+#    self.children.center:draw_shader('blueprint_shader')
+#else
+#    self.children.center:draw_shader('dissolve')
+#end
+#'''
+#match_indent = true
 
 [[patches]]
 [patches.pattern]
@@ -63,8 +67,8 @@ payload = '''
         local scale_mod = 0.07 + 0.02*math.sin(1.8*G.TIMERS.REAL) + 0.00*math.sin((G.TIMERS.REAL - math.floor(G.TIMERS.REAL))*math.pi*14)*(1 - (G.TIMERS.REAL - math.floor(G.TIMERS.REAL)))^3
         local rotate_mod = 0.05*math.sin(1.219*G.TIMERS.REAL) + 0.00*math.sin((G.TIMERS.REAL)*math.pi*5)*(1 - (G.TIMERS.REAL - math.floor(G.TIMERS.REAL)))^2
 
-        self.children.floating_sprite:draw_shader('blueprint_shader',   0, nil, nil, self.children.center, scale_mod, rotate_mod, nil, 0.1 + 0.03 * math.sin(1.8 * G.TIMERS.REAL), nil, 0.6)
-        self.children.floating_sprite:draw_shader('blueprint_shader', nil, nil, nil, self.children.center, scale_mod, rotate_mod)
+        self.children.floating_sprite:draw_shader('dissolve',   0, nil, nil, self.children.center, scale_mod, rotate_mod, nil, 0.1 + 0.03 * math.sin(1.8 * G.TIMERS.REAL), nil, 0.6)
+        self.children.floating_sprite:draw_shader('dissolve', nil, nil, nil, self.children.center, scale_mod, rotate_mod)
     end
 '''
 match_indent = true
