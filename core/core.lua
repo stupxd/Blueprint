@@ -209,16 +209,13 @@ function CardArea:align_cards()
         for i = #G.jokers.cards, 1, -1  do
             current_joker = G.jokers.cards[i]
             if current_joker.config and current_joker.config.center and current_joker.config.center.key == 'j_blueprint' then
-                local should_copy = previous_joker and previous_joker.config.center.blueprint_compat and not current_joker.states.drag.is and (copy_when_highlighted or not current_joker.highlighted)
-                if should_copy and previous_joker.config.center.key == 'j_brainstorm' then
+                if previous_joker and previous_joker.config.center.key == 'j_brainstorm' then
                     previous_joker = G.jokers.cards[1]
-
-                    -- leftmost brainstorm, is not copying anything.
-                    if previous_joker.config.center.key == 'j_brainstorm' then
-                        should_copy = false
-                    end
                 end
-                if should_copy and previous_joker.config.center.key == 'j_blueprint' and not previous_joker.blueprint_sprite_copy then
+                local should_copy = previous_joker and previous_joker.config.center.blueprint_compat and not current_joker.states.drag.is and (copy_when_highlighted or not current_joker.highlighted)
+
+                -- leftmost brainstorm, is not copying anything.
+                if should_copy and previous_joker.config.center.key == 'j_brainstorm' then
                     should_copy = false
                 end
 
