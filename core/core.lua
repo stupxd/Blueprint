@@ -3,10 +3,14 @@
 --------------------------------------------------
 
 local copy_when_highlighted
-
 -- Blueprint will stop copying texture when highlighted (by clicking on it)
 -- Remove -- in front of next line to disable this behaviour
--- local copy_when_highlighted = true
+-- copy_when_highlighted = true
+
+local inverted_colors = true
+-- Blueprint shader normally inverts sprite colors
+-- Remove -- in front of next line to disable this behaviour
+-- inverted_colors = false
 
 --------------------------------------------------
 
@@ -18,10 +22,17 @@ local canvas_background_color = {
     0
 }
 
+-- Blueprinted border color
+canvas_background_color = {
+    76 / 255,
+    108 / 255,
+    216 / 255,
+    0
+}
+
 local function process_texture(image)
     local h, w = image:getDimensions()
     local canvas = love.graphics.newCanvas(h, w, {type = '2d', readable = true})
-    canvas:setFilter(image:getFilter())
 
     love.graphics.push()
     
@@ -29,17 +40,19 @@ local function process_texture(image)
     
     local oldCanvas = love.graphics.getCanvas()
     local old_filter1, old_filter2 = image:getFilter()
+    local old_filter11, old_filter22 = love.graphics.getDefaultFilter()
     
+    -- I dont think changing filter does anything.. the image still looks blurry
+    --image:setFilter("nearest", "nearest")
+    --canvas:setFilter("nearest", "nearest")
+    --love.graphics.setDefaultFilter("nearest", "nearest")
     love.graphics.setCanvas( canvas )
     love.graphics.clear(canvas_background_color)
-
-    -- I dont think changing filter does anything.. the image still looks blurry
-    image:setFilter("nearest", "nearest")
     
-    love.graphics.setShader()
     love.graphics.setColor(1, 1, 1, 1)
+
+    G.SHADERS['blueprint_shader']:send('inverted', inverted_colors)
     love.graphics.setShader( G.SHADERS['blueprint_shader'] )
-    canvas:setFilter("nearest", "nearest")
     
     -- Draw image with blueprint shader on new canvas
     love.graphics.draw( image )
@@ -47,10 +60,18 @@ local function process_texture(image)
 
     love.graphics.setShader()
     love.graphics.setCanvas(oldCanvas)
-    image:setFilter(old_filter1, old_filter2)
-    canvas:setFilter(image:getFilter())
+    --image:setFilter(old_filter1, old_filter2)
+    --canvas:setFilter(image:getFilter())
+    --love.graphics.setDefaultFilter(old_filter11, old_filter22)
 
     love.graphics.pop()
+
+    --local fileData = canvas:newImageData():encode('png', 'imblueeeeeedabudeedabudai.png')
+
+    if true then
+        return love.graphics.newImage(canvas:newImageData()) --, {mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling}
+    end
+
     return canvas
 end
 
@@ -189,9 +210,14 @@ function CardArea:align_cards()
             current_joker = G.jokers.cards[i]
             if current_joker.config and current_joker.config.center and current_joker.config.center.key == 'j_blueprint' then
                 local should_copy = previous_joker and previous_joker.config.center.blueprint_compat and not current_joker.states.drag.is and (copy_when_highlighted or not current_joker.highlighted)
-                --if should_copy and current_joker.edition and not previous_joker.children.floating_sprite then
-                --    should_copy = false
-                --end
+                if should_copy and previous_joker.config.center.key == 'j_brainstorm' then
+                    previous_joker = G.jokers.cards[1]
+
+                    -- leftmost brainstorm, is not copying anything.
+                    if previous_joker.config.center.key == 'j_brainstorm' then
+                        should_copy = false
+                    end
+                end
                 if should_copy and previous_joker.config.center.key == 'j_blueprint' and not previous_joker.blueprint_sprite_copy then
                     should_copy = false
                 end
