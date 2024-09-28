@@ -12,6 +12,15 @@ local inverted_colors = true
 -- Remove -- in front of next line to disable this behaviour
 -- inverted_colors = false
 
+local use_brainstorm_logic = true
+-- Normally blueprint copying brainstorm will show sprite of joker copied by brainstorm
+-- Remove -- in front of next line to disable this behaviour
+-- use_brainstorm_logic = false
+
+-- Decreasing this value makes blueprinted sprites darker, going above 0.28 is not recommended.
+local lightness_offset = 0.14
+
+
 --------------------------------------------------
 
 -- Avg blueprint color
@@ -52,6 +61,7 @@ local function process_texture(image)
     love.graphics.setColor(1, 1, 1, 1)
 
     G.SHADERS['blueprint_shader']:send('inverted', inverted_colors)
+    G.SHADERS['blueprint_shader']:send('lightness_offset', lightness_offset)
     love.graphics.setShader( G.SHADERS['blueprint_shader'] )
     
     -- Draw image with blueprint shader on new canvas
@@ -209,13 +219,13 @@ function CardArea:align_cards()
         for i = #G.jokers.cards, 1, -1  do
             current_joker = G.jokers.cards[i]
             if current_joker.config and current_joker.config.center and current_joker.config.center.key == 'j_blueprint' then
-                if previous_joker and previous_joker.config.center.key == 'j_brainstorm' then
+                if use_brainstorm_logic and previous_joker and previous_joker.config.center.key == 'j_brainstorm' then
                     previous_joker = G.jokers.cards[1]
                 end
                 local should_copy = previous_joker and previous_joker.config.center.blueprint_compat and not current_joker.states.drag.is and (copy_when_highlighted or not current_joker.highlighted)
 
                 -- leftmost brainstorm, is not copying anything.
-                if should_copy and previous_joker.config.center.key == 'j_brainstorm' then
+                if use_brainstorm_logic and should_copy and previous_joker.config.center.key == 'j_brainstorm' then
                     should_copy = false
                 end
 
