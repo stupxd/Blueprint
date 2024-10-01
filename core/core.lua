@@ -7,7 +7,7 @@ local copy_when_highlighted
 -- Remove -- in front of next line to disable this behaviour
 -- copy_when_highlighted = true
 
-local inverted_colors = true
+local inverted_colors = false
 -- Blueprint shader normally inverts sprite colors
 -- Remove -- in front of next line to disable this behaviour
 -- inverted_colors = false
@@ -18,7 +18,18 @@ local use_brainstorm_logic = true
 -- use_brainstorm_logic = false
 
 -- Decreasing this value makes blueprinted sprites darker, going above 0.28 is not recommended.
-local lightness_offset = 0.14
+local lightness_offset = 0.131
+
+-- Change coloring mode
+-- 1 = linear (1 or less)
+-- 2 = exponent
+-- 3 = parabola
+-- 4 = sin
+local coloring_mode = 1
+
+-- Change pow for exponent and parabola modes
+local power = 1
+
 
 
 --------------------------------------------------
@@ -48,8 +59,8 @@ local function process_texture(image)
     
     
     local oldCanvas = love.graphics.getCanvas()
-    local old_filter1, old_filter2 = image:getFilter()
-    local old_filter11, old_filter22 = love.graphics.getDefaultFilter()
+    --local old_filter1, old_filter2 = image:getFilter()
+    --local old_filter11, old_filter22 = love.graphics.getDefaultFilter()
     
     -- I dont think changing filter does anything.. the image still looks blurry
     --image:setFilter("nearest", "nearest")
@@ -62,6 +73,8 @@ local function process_texture(image)
 
     G.SHADERS['blueprint_shader']:send('inverted', inverted_colors)
     G.SHADERS['blueprint_shader']:send('lightness_offset', lightness_offset)
+    G.SHADERS['blueprint_shader']:send('mode', coloring_mode)
+    G.SHADERS['blueprint_shader']:send('expo', power)
     love.graphics.setShader( G.SHADERS['blueprint_shader'] )
     
     -- Draw image with blueprint shader on new canvas
