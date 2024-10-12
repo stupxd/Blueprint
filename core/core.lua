@@ -150,6 +150,7 @@ local function blueprint_sprite(blueprint, card)
     if not blueprint.blueprint_sprite_copy then
         blueprint.blueprint_sprite_copy = blueprint.children.center
     end
+    blueprint.blueprint_copy_key = card.config.center.key
 
     -- Make sure to remove floating sprite before applying new one
     if blueprint.children.floating_sprite then
@@ -190,6 +191,7 @@ local function restore_sprite(blueprint)
     blueprint.children.center:remove()
     blueprint.children.center = blueprint.blueprint_sprite_copy
     blueprint.blueprint_sprite_copy = nil
+blueprint.blueprint_copy_key = nil
 
     if blueprint.children.floating_sprite then
         blueprint.children.floating_sprite:remove()
