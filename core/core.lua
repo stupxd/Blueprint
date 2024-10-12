@@ -7,7 +7,7 @@ local copy_when_highlighted
 -- Remove -- in front of next line to disable this behaviour
 -- copy_when_highlighted = true
 
-local inverted_colors = false
+local inverted_colors = true
 -- Blueprint shader normally inverts sprite colors
 -- Remove -- in front of next line to disable this behaviour
 -- inverted_colors = false
@@ -18,14 +18,15 @@ local use_brainstorm_logic = true
 -- use_brainstorm_logic = false
 
 -- Decreasing this value makes blueprinted sprites darker, going above 0.28 is not recommended.
-local lightness_offset = 0.131
+local lightness_offset = 0.
 
 -- Change coloring mode
 -- 1 = linear (1 or less)
 -- 2 = exponent
--- 3 = parabola
--- 4 = sin
-local coloring_mode = 1
+-- 3 = custom
+-- 4 = none
+-- 5 = sin
+local coloring_mode = 3
 
 -- Change pow for exponent and parabola modes
 local power = 1
@@ -58,7 +59,7 @@ local function process_texture(image)
     
     
     
-    local oldCanvas = love.graphics.getCanvas()
+    --local oldCanvas = love.graphics.getCanvas()
     --local old_filter1, old_filter2 = image:getFilter()
     --local old_filter11, old_filter22 = love.graphics.getDefaultFilter()
     
@@ -82,7 +83,8 @@ local function process_texture(image)
 
 
     love.graphics.setShader()
-    love.graphics.setCanvas(oldCanvas)
+    --love.graphics.setCanvas(oldCanvas)
+    love.graphics.setCanvas()
     --image:setFilter(old_filter1, old_filter2)
     --canvas:setFilter(image:getFilter())
     --love.graphics.setDefaultFilter(old_filter11, old_filter22)
@@ -91,11 +93,7 @@ local function process_texture(image)
 
     --local fileData = canvas:newImageData():encode('png', 'imblueeeeeedabudeedabudai.png')
 
-    if true then
-        return love.graphics.newImage(canvas:newImageData()) --, {mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling}
-    end
-
-    return canvas
+    return love.graphics.newImage(canvas:newImageData())
 end
 
 local function blueprint_atlas(atlas)
