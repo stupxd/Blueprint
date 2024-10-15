@@ -12,6 +12,9 @@ local inverted_colors = false
 -- Remove -- in front of next line to disable this behaviour
 -- inverted_colors = false
 
+local use_debuff_logic = true
+-- Dont change sprite for debuffed jokers
+
 local use_brainstorm_logic = true
 -- Normally blueprint copying brainstorm will show sprite of joker copied by brainstorm
 -- Remove -- in front of next line to disable this behaviour
@@ -191,7 +194,7 @@ local function restore_sprite(blueprint)
     blueprint.children.center:remove()
     blueprint.children.center = blueprint.blueprint_sprite_copy
     blueprint.blueprint_sprite_copy = nil
-blueprint.blueprint_copy_key = nil
+    blueprint.blueprint_copy_key = nil
 
     if blueprint.children.floating_sprite then
         blueprint.children.floating_sprite:remove()
@@ -235,12 +238,21 @@ function CardArea:align_cards()
             current_joker = G.jokers.cards[i]
             if current_joker.config and current_joker.config.center and current_joker.config.center.key == 'j_blueprint' then
                 if use_brainstorm_logic and previous_joker and previous_joker.config.center.key == 'j_brainstorm' then
-                    previous_joker = G.jokers.cards[1]
+                    if use_debuff_logic and previous_joker.debuff then
+                        -- Brainstorm is debuffed, so it isn'texture copying leftmost
+                    else
+                        previous_joker = G.jokers.cards[1]
+                    end
                 end
                 local should_copy = previous_joker and previous_joker.config.center.blueprint_compat and not current_joker.states.drag.is and (copy_when_highlighted or not current_joker.highlighted)
 
                 -- leftmost brainstorm, is not copying anything.
                 if use_brainstorm_logic and should_copy and previous_joker.config.center.key == 'j_brainstorm' then
+                    should_copy = false
+                end
+
+                if use_debuff_logic and should_copy and (current_joker.debuff or previous_joker.debuff) then
+                    -- Copied card is debuffed, so shouldn't copy
                     should_copy = false
                 end
 
