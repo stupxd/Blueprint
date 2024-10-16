@@ -146,7 +146,12 @@ end
 
 local function blueprint_sprite(blueprint, card)
     if equal_sprites(blueprint.children.center, card.children.center) then
-        return
+        if card.children.floating_sprite and not equal_sprites(blueprint.children.floating_sprite, card.children.floating_sprite) then
+            -- blueprinted card has floating sprite, and floating sprites aren't equal
+            -- need to update!
+        else
+            return
+        end
     end
 
     -- Not copying any other joker's sprite at the moment. Cache current sprite before updating
