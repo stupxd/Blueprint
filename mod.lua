@@ -6,7 +6,7 @@
 --- PRIORITY: 69
 --- BADGE_COLOR: 4B69CF
 --- DISPLAY_NAME: Blueprint
---- VERSION: 2.4
+--- VERSION: 2.5
 
 ----------------------------------------------
 ------------MOD CODE -------------------------
