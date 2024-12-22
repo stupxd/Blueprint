@@ -275,10 +275,8 @@ local function find_blueprinted_joker(current_joker, previous_joker)
         return
     end
 
-    local should_copy = previous_joker.config.center.blueprint_compat and not current_joker.states.drag.is and (copy_when_highlighted or not current_joker.highlighted)
-
     if use_debuff_logic then
-        if should_copy and (current_joker.debuff or previous_joker.debuff) then
+        if current_joker.debuff or previous_joker.debuff then
             -- Copied card is debuffed, so shouldn't copy
             return nil
         end
@@ -289,7 +287,12 @@ local function find_blueprinted_joker(current_joker, previous_joker)
         end
     end
 
-    return previous_joker
+    local should_copy = previous_joker.config.center.blueprint_compat and not current_joker.states.drag.is and (copy_when_highlighted or not current_joker.highlighted)
+    if should_copy then
+        return previous_joker
+    end
+
+    return nil
 end
 
 local cardarea_align_cards = CardArea.align_cards
