@@ -109,7 +109,8 @@ local function process_texture(image)
     return canvas
 end
 
-local function blueprint_atlas(atlas)
+local function blueprint_atlas(a)
+    local atlas = a.name or a.key
     local blueprinted = atlas.."_blueprinted"
 
     if not G.ASSET_ATLAS[blueprinted] then
@@ -176,7 +177,7 @@ local function blueprint_sprite(blueprint, card)
 
     align_sprite(blueprint, nil, true)
 
-    blueprint.children.center = Sprite(blueprint.T.x, blueprint.T.y, blueprint.T.w, blueprint.T.h, blueprint_atlas(card.children.center.atlas.name), card.children.center.sprite_pos)
+    blueprint.children.center = Sprite(blueprint.T.x, blueprint.T.y, blueprint.T.w, blueprint.T.h, blueprint_atlas(card.children.center.atlas), card.children.center.sprite_pos)
     blueprint.children.center.states.hover = blueprint.states.hover
     blueprint.children.center.states.click = blueprint.states.click
     blueprint.children.center.states.drag = blueprint.states.drag
@@ -184,7 +185,7 @@ local function blueprint_sprite(blueprint, card)
     blueprint.children.center:set_role({major = blueprint, role_type = 'Glued', draw_major = blueprint})
 
     if card.children.floating_sprite then
-        blueprint.children.floating_sprite = Sprite(blueprint.T.x, blueprint.T.y, blueprint.T.w, blueprint.T.h, blueprint_atlas(card.children.floating_sprite.atlas.name), card.children.floating_sprite.sprite_pos)
+        blueprint.children.floating_sprite = Sprite(blueprint.T.x, blueprint.T.y, blueprint.T.w, blueprint.T.h, blueprint_atlas(card.children.floating_sprite.atlas), card.children.floating_sprite.sprite_pos)
         blueprint.children.floating_sprite.role.draw_major = blueprint
         blueprint.children.floating_sprite.states.hover.can = false
         blueprint.children.floating_sprite.states.click.can = false
@@ -228,7 +229,7 @@ function Sprite:reset()
         if type(self.atlas.release) == "function" then
             self.atlas:release()
         end
-        self.atlas = blueprint_atlas(self.atlas.name)
+        self.atlas = blueprint_atlas(self.atlas)
         self:set_sprite_pos(self.sprite_pos)
         return
     end
