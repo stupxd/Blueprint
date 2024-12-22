@@ -53,6 +53,14 @@ canvas_background_color = {
     0
 }
 
+local function is_blueprint(card)
+    return card and card.config and card.config.center and card.config.center.key == 'j_blueprint'
+end
+
+local function is_brainstorm(card)
+    return card and card.config and card.config.center and card.config.center.key == 'j_brainstorm'
+end
+
 local function process_texture(image)
     local h, w = image:getDimensions()
     local canvas = love.graphics.newCanvas(h, w, {type = '2d', readable = true})
@@ -228,12 +236,60 @@ function Sprite:reset()
     return sprite_reset(self)
 end
 
-local function is_blueprint(card)
-    return card and card.config and card.config.center and card.config.center.key == 'j_blueprint'
+local function find_brainstormed_joker()
+    local index = 1
+    local max = #G.jokers.cards
+    while index <= max do
+        local current = G.jokers.cards[index]
+        if not current or current.debuff then
+            return nil
+        end
+
+        if is_blueprint(current) then
+            index = index + 1
+        elseif is_brainstorm(current) then
+            -- Looped back into brainstorm
+            return nil
+        else
+            return current
+        end
+    end
+
+    return nil
 end
 
-local function is_brainstorm(card)
-    return card and card.config and card.config.center and card.config.center.key == 'j_brainstorm'
+local function find_blueprinted_joker(current_joker, previous_joker)
+    if not previous_joker then
+        return nil
+    end
+
+    if use_brainstorm_logic and is_brainstorm(previous_joker) then
+        if use_debuff_logic and previous_joker.debuff then
+            -- Brainstorm is debuffed, so it isn't copying leftmost
+            return nil
+        else
+            previous_joker = find_brainstormed_joker()
+        end
+    end
+    if not previous_joker then
+        return
+    end
+
+    local should_copy = previous_joker.config.center.blueprint_compat and not current_joker.states.drag.is and (copy_when_highlighted or not current_joker.highlighted)
+
+    if use_debuff_logic then
+        if should_copy and (current_joker.debuff or previous_joker.debuff) then
+            -- Copied card is debuffed, so shouldn't copy
+            return nil
+        end
+
+        -- current joker is blueprint. it is debuffed. so blueprints to the left aren't copying anything
+        if current_joker.debuff then
+            return nil
+        end
+    end
+
+    return previous_joker
 end
 
 local cardarea_align_cards = CardArea.align_cards
@@ -241,50 +297,23 @@ function CardArea:align_cards()
     local ret = cardarea_align_cards(self)
 
     if self == G.jokers then
+        local brainstormed_joker = find_brainstormed_joker()
+
         local previous_joker = nil
         local current_joker = nil
         for i = #G.jokers.cards, 1, -1  do
             current_joker = G.jokers.cards[i]
-            if is_blueprint(current_joker) then
-                if use_brainstorm_logic and is_brainstorm(previous_joker) then
-                    if use_debuff_logic and previous_joker.debuff then
-                        -- Brainstorm is debuffed, so it isn't copying leftmost
-                    else
-                        previous_joker = nil
-                        local index = 1
-                        local max = #G.jokers.cards
-                        while index <= max do
-                            local current = G.jokers.cards[index]
-                            if not current or current.debuff then
-                                break
-                            end
-
-                            if is_blueprint(current) then
-                                index = index + 1
-                            elseif is_brainstorm(current) then
-                                break
-                            else
-                                previous_joker = current
-                                break
-                            end
-                        end
-                    end
-                end
-                local should_copy = previous_joker and previous_joker.config.center.blueprint_compat and not current_joker.states.drag.is and (copy_when_highlighted or not current_joker.highlighted)
-
-                if use_debuff_logic then
-                    if should_copy and (current_joker.debuff or previous_joker.debuff) then
-                        -- Copied card is debuffed, so shouldn't copy
-                        should_copy = false
-                    end
-
-                    -- current joker is blueprint. it is debuffed. so blueprints to the left aren't copying anything
-                    if current_joker.debuff then
-                        previous_joker = nil
-                    end
+            if is_brainstorm(current_joker) then
+                if brainstormed_joker then
+                    -- brainstorm_sprite(current_joker, brainstormed_joker)
+                else
+                    -- restore_sprite(current_joker)
                 end
 
-                if should_copy then
+            elseif is_blueprint(current_joker) then
+                previous_joker = find_blueprinted_joker(current_joker, previous_joker)
+
+                if previous_joker then
                     blueprint_sprite(current_joker, previous_joker)
                 else
                     restore_sprite(current_joker)
