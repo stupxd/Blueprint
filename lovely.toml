@@ -3,18 +3,17 @@ version = "1.0.0"
 dump_lua = true
 priority = 420
 
-
 [[patches]]
 [patches.module]
-source = "assets/shaders/blueprint.lua"
-before = "game.lua"
-name = "blueprint.shader"
-
-[[patches]]
-[patches.module]
-source = "core/core.lua"
+source = "libs/nativefs.lua"
 before = "main.lua"
-name = "blueprint.core"
+name = "blueprint.nfs"
+
+[[patches]]
+[patches.module]
+source = "internal/init.lua"
+before = "main.lua"
+name = "blueprint.init"
 
 # Add core functionality
 [[patches]]
@@ -22,13 +21,23 @@ name = "blueprint.core"
 target = "main.lua"
 position = "append"
 sources = [
-    "main.lua",
+    "blueprint.lua",
 ]
+
+# Localization
+[[patches]]
+[patches.pattern]
+target = "game.lua"
+pattern = "boot_timer('prep stage', 'splash prep',1)"
+position = "before"
+payload = '''
+Blueprint.load_mod_file('internal/localization.lua', 'internal.localization')
+'''
+match_indent = true
 
 # 
 # Patch base game functions to allow blueprint shader to work
 # 
-
 [[patches]]
 [patches.pattern]
 target = "game.lua"
@@ -36,10 +45,25 @@ pattern = '''
 local shader_files = love.filesystem.getDirectoryItems("resources/shaders")'''
 position = "before"
 payload = '''
-
-G.SHADERS['blueprint_shader'] = love.graphics.newShader(require "blueprint.shader")
+Blueprint.load_shaders()
 '''
 match_indent = true
+
+# Test for joker menu
+#[[patches]]
+#[patches.pattern]
+#target = "functions/UI_definitions.lua"
+#pattern = '''
+#function G.UIDEF.card_focus_ui(card)'''
+#position = "after"
+#payload = '''
+#    local name = "I dunno"
+#    if card.config and card.config.center then
+#        name = card.config.center.key
+#    end
+#    Blueprint.log("hi hello im " .. tostring(name).. ". highlighed: "..tostring(card.highlighted))
+#'''
+#match_indent = true
 
 #[[patches]]
 #[patches.pattern]
@@ -73,7 +97,7 @@ payload = '''
             self.hover_tilt = self.hover_tilt/1.5
         else
             self.children.floating_sprite:draw_shader('dissolve',0, nil, nil, self.children.center,scale_mod, rotate_mod,nil, 0.1 + 0.03*math.sin(1.8*G.TIMERS.REAL),nil, 0.6)
-        self.children.floating_sprite:draw_shader('dissolve', nil, nil, nil, self.children.center, scale_mod, rotate_mod)
+            self.children.floating_sprite:draw_shader('dissolve', nil, nil, nil, self.children.center, scale_mod, rotate_mod)
         end
         --self.children.floating_sprite:draw_shader('dissolve',   0, nil, nil, self.children.center, scale_mod, rotate_mod, nil, 0.1 + 0.03 * math.sin(1.8 * G.TIMERS.REAL), nil, 0.6)
         --self.children.floating_sprite:draw_shader('dissolve', nil, nil, nil, self.children.center, scale_mod, rotate_mod)

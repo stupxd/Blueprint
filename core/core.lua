@@ -214,9 +214,6 @@ local function restore_sprite(blueprint)
     align_sprite(blueprint, nil, true)
 end
 
-return function ()
-
-
 local sprite_reset = Sprite.reset
 function Sprite:reset()
     if self.atlas.blueprint then
@@ -303,8 +300,3 @@ function CardArea:align_cards()
     return ret
 end
 
-
-
-
-
-end
