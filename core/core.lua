@@ -63,7 +63,7 @@ end
 
 local function process_texture(image)
     local h, w = image:getDimensions()
-    local canvas = love.graphics.newCanvas(h, w, {type = '2d', readable = true})
+    local canvas = love.graphics.newCanvas(h, w, {type = '2d', readable = true, dpiscale=2})
 
     love.graphics.push()
     
