@@ -423,7 +423,8 @@ function CardArea:align_cards()
         for i = #G.jokers.cards, 1, -1  do
             current_joker = G.jokers.cards[i]
             if is_brainstorm(current_joker) then
-                if brainstormed_joker then
+                local should_copy = brainstormed_joker and not (use_debuff_logic and (current_joker.debuff or brainstormed_joker.debuff)) and brainstormed_joker.config.center.blueprint_compat and not current_joker.states.drag.is and (copy_when_highlighted or not current_joker.highlighted)
+                if should_copy then
                     brainstorm_sprite(current_joker, brainstormed_joker)
                 else
                     restore_sprite(current_joker)
