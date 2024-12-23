@@ -114,10 +114,10 @@ vec4 effect( vec4 colour, sampler2D jokers_sampler, vec2 texture_coords, vec2 sc
 {
     // float col = greyscale(texture(jokers_sampler, texture_coords));
 
-	ivec2 absolute_texture_coods = ivec2(texture_coords * textureSize(jokers_sampler, 0));
-    // float col = gaussian_blur(jokers_sampler, absolute_texture_coods);
-    // vec2 d = sobel_filter(jokers_sampler, absolute_texture_coods);
-    float canny = canny_edges(jokers_sampler, absolute_texture_coods);
+	ivec2 absolute_texture_coords = ivec2(texture_coords * textureSize(jokers_sampler, 0));
+    // float col = gaussian_blur(jokers_sampler, absolute_texture_coords);
+    // vec2 d = sobel_filter(jokers_sampler, absolute_texture_coords);
+    float canny = canny_edges(jokers_sampler, absolute_texture_coords);
 
     vec4 cannycol = mapcol(canny);
     // if (fc.x % 71 < 5 || fc.x % 71 >= 66) {
@@ -127,5 +127,6 @@ vec4 effect( vec4 colour, sampler2D jokers_sampler, vec2 texture_coords, vec2 sc
     //     cannycol = vec4(0, 0, 0, 0);
     // }
 	
-	return cannycol;
+	return texelFetch(jokers_sampler, absolute_texture_coords, 0);
+	// return texture(jokers_sampler, texture_coords);
 }

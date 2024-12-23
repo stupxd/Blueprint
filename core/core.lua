@@ -76,7 +76,7 @@ local function process_texture_blueprint(image)
     -- I dont think changing filter does anything.. the image still looks blurry
     --image:setFilter("nearest", "nearest")
     --canvas:setFilter("nearest", "nearest")
-    --love.graphics.setDefaultFilter("nearest", "nearest")
+    -- love.graphics.setDefaultFilter("nearest", "nearest")
     love.graphics.setCanvas( canvas )
     love.graphics.clear(canvas_background_color)
     
@@ -124,7 +124,7 @@ local function process_texture_brainstorm(image)
     -- I dont think changing filter does anything.. the image still looks blurry
     --image:setFilter("nearest", "nearest")
     --canvas:setFilter("nearest", "nearest")
-    --love.graphics.setDefaultFilter("nearest", "nearest")
+    -- love.graphics.setDefaultFilter("nearest", "nearest")
     love.graphics.setCanvas( canvas )
     love.graphics.clear(canvas_background_color)
     
