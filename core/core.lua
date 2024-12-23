@@ -61,22 +61,23 @@ local function is_brainstorm(card)
     return card and card.config and card.config.center and card.config.center.key == 'j_brainstorm'
 end
 
-local function process_texture_blueprint(image)
-    local h, w = image:getDimensions()
-    local canvas = love.graphics.newCanvas(h, w, {type = '2d', readable = true})
 
-    love.graphics.push()
+local function process_texture_blueprint(image)
+    local width, height = image:getDimensions()
+    local canvas = love.graphics.newCanvas(width, height, {type = '2d', readable = true, dpiscale = image:getDPIScale()})
+
+    love.graphics.push("all")
     
     
     
-    local oldCanvas = love.graphics.getCanvas()
+    -- local oldCanvas = love.graphics.getCanvas()
     --local old_filter1, old_filter2 = image:getFilter()
     --local old_filter11, old_filter22 = love.graphics.getDefaultFilter()
     
     -- I dont think changing filter does anything.. the image still looks blurry
     --image:setFilter("nearest", "nearest")
     --canvas:setFilter("nearest", "nearest")
-    -- love.graphics.setDefaultFilter("nearest", "nearest")
+    --love.graphics.setDefaultFilter("nearest", "nearest")
     love.graphics.setCanvas( canvas )
     love.graphics.clear(canvas_background_color)
     
@@ -92,8 +93,8 @@ local function process_texture_blueprint(image)
     love.graphics.draw( image )
 
 
-    love.graphics.setShader()
-    love.graphics.setCanvas(oldCanvas)
+    -- love.graphics.setShader()
+    -- love.graphics.setCanvas(oldCanvas)
     --image:setFilter(old_filter1, old_filter2)
     --canvas:setFilter(image:getFilter())
     --love.graphics.setDefaultFilter(old_filter11, old_filter22)
@@ -103,58 +104,46 @@ local function process_texture_blueprint(image)
     --local fileData = canvas:newImageData():encode('png', 'imblueeeeeedabudeedabudai.png')
 
     if true then
-        return love.graphics.newImage(canvas:newImageData()) --, {mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling}
+        return love.graphics.newImage(canvas:newImageData(), {mipmaps = true, dpiscale = image:getDPIScale()})
     end
 
     return canvas
 end
 
 local function process_texture_brainstorm(image)
-    local h, w = image:getDimensions()
-    local canvas = love.graphics.newCanvas(h, w, {type = '2d', readable = true})
+    local width, height = image:getDimensions()
+    local canvas = love.graphics.newCanvas(width, height, {type = '2d', readable = true, dpiscale = image:getDPIScale()})
 
-    love.graphics.push()
-    
-    
-    
-    local oldCanvas = love.graphics.getCanvas()
-    --local old_filter1, old_filter2 = image:getFilter()
-    --local old_filter11, old_filter22 = love.graphics.getDefaultFilter()
-    
-    -- I dont think changing filter does anything.. the image still looks blurry
-    --image:setFilter("nearest", "nearest")
-    --canvas:setFilter("nearest", "nearest")
-    -- love.graphics.setDefaultFilter("nearest", "nearest")
+    love.graphics.push("all")
+        
     love.graphics.setCanvas( canvas )
     love.graphics.clear(canvas_background_color)
     
     love.graphics.setColor(1, 1, 1, 1)
 
-    -- G.SHADERS['blueprint_shader']:send('inverted', inverted_colors)
-    -- G.SHADERS['blueprint_shader']:send('lightness_offset', lightness_offset)
-    -- G.SHADERS['blueprint_shader']:send('mode', coloring_mode)
-    -- G.SHADERS['blueprint_shader']:send('expo', power)
+    local bgImage = G.ASSET_ATLAS["blue_brainstorm"].image
+    bgImage:setWrap("repeat", "repeat")
+    local bgQuad = love.graphics.newQuad(0, 0, width, height, bgImage)
+    love.graphics.setShader()
+    love.graphics.draw(bgImage, bgQuad)
+
+    G.SHADERS['brainstorm_shader']:send('dpi', image:getDPIScale())
+    G.SHADERS['brainstorm_shader']:send('greyscaleWeights', {0.299, 0.587, 0.114})
+    G.SHADERS['brainstorm_shader']:send('blurAmount', 1)
+    G.SHADERS['brainstorm_shader']:send('cardSize', {71, 95})
+    G.SHADERS['brainstorm_shader']:send('margin', {5, 5})
+    G.SHADERS['brainstorm_shader']:send('blue', {0.0, 0.0, 1.0, 0.4})
+    G.SHADERS['brainstorm_shader']:send('red', {1.0, 0.0, 0.0, 0.4})
+    G.SHADERS['brainstorm_shader']:send('blueThreshold', 0.75)
+    G.SHADERS['brainstorm_shader']:send('redThreshold', 0.25)
     love.graphics.setShader( G.SHADERS['brainstorm_shader'] )
     
     -- Draw image with blueprint shader on new canvas
     love.graphics.draw( image )
 
-
-    love.graphics.setShader()
-    love.graphics.setCanvas(oldCanvas)
-    --image:setFilter(old_filter1, old_filter2)
-    --canvas:setFilter(image:getFilter())
-    --love.graphics.setDefaultFilter(old_filter11, old_filter22)
-
     love.graphics.pop()
 
-    --local fileData = canvas:newImageData():encode('png', 'imblueeeeeedabudeedabudai.png')
-
-    if true then
-        return love.graphics.newImage(canvas:newImageData()) --, {mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling}
-    end
-
-    return canvas
+    return love.graphics.newImage(canvas:newImageData(), {mipmaps = true, dpiscale = image:getDPIScale()})
 end
 
 local function blueprint_atlas(a)
