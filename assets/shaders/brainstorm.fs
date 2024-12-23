@@ -6,8 +6,8 @@
 	#define PRECISION mediump
 #endif
 
-vec4 greyscale(vec4 col) {
-    return vec4(0);
+float greyscale(vec4 col) {
+    return 0.299 * col.r + 0.587 * col.g + 0.114 * col.b;
 }
 
 vec4 gaussian_blur(sampler2D jokers_sampler, ivec2 texture_coords) {
@@ -22,9 +22,9 @@ vec4 canny_edges(sampler2D jokers_sampler, ivec2 texture_coords) {
     return vec4(0);
 }
 
-vec4 effect( vec4 colour, Image texture, vec2 texture_coords, vec2 screen_coords )
+vec4 effect( vec4 colour, sampler2D jokers_sampler, vec2 texture_coords, vec2 screen_coords )
 {
-    vec4 tex = Texel(texture, texture_coords);
+    vec4 col = texture(jokers_sampler, texture_coords);
 	
-	return vec4(0.9, 0.1, 0.3, tex.a);
+	return vec4(vec3(greyscale(col)), col.a);
 }
