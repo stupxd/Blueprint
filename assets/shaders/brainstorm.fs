@@ -7,32 +7,38 @@
 #endif
 
 extern int dpi;
-extern vec3 greyscaleWeights;
-extern int blurAmount;
-extern ivec2 cardSize;
+extern vec3 greyscale_weights;
+extern int blur_amount;
+extern ivec2 card_size;
 extern ivec2 margin;
-extern vec4 blue;
-extern vec4 red;
-extern float blueThreshold;
-extern float redThreshold;
+extern vec4 blue_low;
+extern vec4 blue_high;
+extern vec4 red_low;
+extern vec4 red_high;
+extern float blue_threshold;
+extern float red_threshold;
 
 float greyscale(vec4 col) {
-    return dot(greyscaleWeights, col.rgb);
+    return dot(greyscale_weights, col.rgb);
+}
+
+vec4 myTexelFetch(sampler2D s, ivec2 c, int l) {
+    return texelFetch(s, c * dpi, l);
 }
 
 float gaussian_blur(sampler2D jokers_sampler, ivec2 texture_coords) {
 	float col = 0.0;
     float total = 0.0;
-    for (int x = -blurAmount; x <= blurAmount; x++) {
-        for (int y = -blurAmount; y <= blurAmount; y++) {
+    for (int x = -blur_amount; x <= blur_amount; x++) {
+        for (int y = -blur_amount; y <= blur_amount; y++) {
             ivec2 offset = ivec2(x, y);
             float factor;
-            if (blurAmount == 0)
+            if (blur_amount == 0)
                 factor = 1.0;
             else {
-                factor = exp(-dot(offset, offset) / float(blurAmount * blurAmount));
+                factor = exp(-dot(offset, offset) / float(blur_amount * blur_amount));
             }
-            col += greyscale(texelFetch(jokers_sampler, texture_coords + offset * dpi, 0)) * factor;
+            col += greyscale(myTexelFetch(jokers_sampler, texture_coords + offset, 0)) * factor;
             total += factor;
         }
     }
@@ -40,9 +46,9 @@ float gaussian_blur(sampler2D jokers_sampler, ivec2 texture_coords) {
 	return col;
 }
 
-#define sobel_kernelLength 6
+#define sobel_kernel_length 6
 
-vec3 sobel_kernelx[sobel_kernelLength] = vec3[sobel_kernelLength] (
+vec3 sobel_kernelx[sobel_kernel_length] = vec3[sobel_kernel_length] (
     vec3(-1, -1, -1),
     vec3(-1, 0, -2),
     vec3(-1, 1, -1),
@@ -51,7 +57,7 @@ vec3 sobel_kernelx[sobel_kernelLength] = vec3[sobel_kernelLength] (
     vec3(1, 1, 1)
 );
 
-vec3 sobel_kernely[sobel_kernelLength] = vec3[sobel_kernelLength] (
+vec3 sobel_kernely[sobel_kernel_length] = vec3[sobel_kernel_length] (
     vec3(-1, -1, -1),
     vec3(0, -1, -2),
     vec3(1, -1, -1),
@@ -62,9 +68,9 @@ vec3 sobel_kernely[sobel_kernelLength] = vec3[sobel_kernelLength] (
 
 vec2 sobel_filter(sampler2D jokers_sampler, ivec2 texture_coords) {
     vec2 d = vec2(0);
-    for (int i = 0; i < sobel_kernelLength; i++) {
-        d.x += gaussian_blur(jokers_sampler, texture_coords + ivec2(sobel_kernelx[i].xy) * dpi) * sobel_kernelx[i].z;
-        d.y += gaussian_blur(jokers_sampler, texture_coords + ivec2(sobel_kernely[i].xy) * dpi) * sobel_kernely[i].z;
+    for (int i = 0; i < sobel_kernel_length; i++) {
+        d.x += gaussian_blur(jokers_sampler, texture_coords + ivec2(sobel_kernelx[i].xy)) * sobel_kernelx[i].z;
+        d.y += gaussian_blur(jokers_sampler, texture_coords + ivec2(sobel_kernely[i].xy)) * sobel_kernely[i].z;
     }
     return d;
 }
@@ -97,8 +103,8 @@ float canny_edges(sampler2D jokers_sampler, ivec2 texture_coords) {
         offset2 = ivec2(0, 1);
     }
     // sample
-    float g1 = length(sobel_filter(jokers_sampler, texture_coords + offset1 * dpi));
-    float g2 = length(sobel_filter(jokers_sampler, texture_coords + offset2 * dpi));
+    float g1 = length(sobel_filter(jokers_sampler, texture_coords + offset1));
+    float g2 = length(sobel_filter(jokers_sampler, texture_coords + offset2));
     // if this is a local maximum
     if (g1 < g && g2 < g) {
         return g;
@@ -107,12 +113,20 @@ float canny_edges(sampler2D jokers_sampler, ivec2 texture_coords) {
     }
 }
 
-vec4 mapcol(float v) {
-    if (v > blueThreshold) {
-        return blue;
+float hash12(vec2 p)
+{
+	vec3 p3  = fract(vec3(p.xyx) * .1031);
+    p3 += dot(p3, p3.yzx + 33.33);
+    return fract((p3.x + p3.y) * p3.z);
+}
+
+
+vec4 mapcol(float v, ivec2 coords) {
+    if (v > blue_threshold) {
+        return mix(blue_low, blue_high, hash12(coords));
     }
-    else if (v > redThreshold) {
-        return red;
+    else if (v > red_threshold) {
+        return mix(red_low, red_high, hash12(coords));
     } else {
         return vec4(0, 0, 0, 0);
     }
@@ -122,18 +136,16 @@ vec4 effect( vec4 colour, sampler2D jokers_sampler, vec2 texture_coords, vec2 sc
 {
     // float col = greyscale(texture(jokers_sampler, texture_coords));
 
-	ivec2 absolute_texture_coords = ivec2(texture_coords * textureSize(jokers_sampler, 0));
-    ivec2 absolute_card_size = cardSize * dpi;
-    ivec2 absolute_margin = margin * dpi;
+	ivec2 absolute_texture_coords = ivec2(texture_coords * textureSize(jokers_sampler, 0)) / dpi;
     // float col = gaussian_blur(jokers_sampler, absolute_texture_coords);
     // vec2 d = sobel_filter(jokers_sampler, absolute_texture_coords);
     float canny = canny_edges(jokers_sampler, absolute_texture_coords);
 
-    vec4 cannycol = mapcol(canny);
-    if (absolute_texture_coords.x % absolute_card_size.x < margin.x || absolute_texture_coords.x % absolute_card_size.x >= absolute_card_size.x - margin.x) {
+    vec4 cannycol = mapcol(canny, absolute_texture_coords);
+    if (absolute_texture_coords.x % card_size.x < margin.x || absolute_texture_coords.x % card_size.x >= card_size.x - margin.x) {
         cannycol = vec4(0, 0, 0, 0);
     }
-    if (absolute_texture_coords.y % absolute_card_size.y < margin.y || absolute_texture_coords.y % absolute_card_size.y >= absolute_card_size.y - margin.y) {
+    if (absolute_texture_coords.y % card_size.y < margin.y || absolute_texture_coords.y % card_size.y >= card_size.y - margin.y) {
         cannycol = vec4(0, 0, 0, 0);
     }
     
