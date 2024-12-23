@@ -130,11 +130,11 @@ local function process_texture_brainstorm(image)
     
     love.graphics.setColor(1, 1, 1, 1)
 
-    G.SHADERS['blueprint_shader']:send('inverted', inverted_colors)
-    G.SHADERS['blueprint_shader']:send('lightness_offset', lightness_offset)
-    G.SHADERS['blueprint_shader']:send('mode', coloring_mode)
-    G.SHADERS['blueprint_shader']:send('expo', power)
-    love.graphics.setShader( G.SHADERS['blueprint_shader'] )
+    -- G.SHADERS['blueprint_shader']:send('inverted', inverted_colors)
+    -- G.SHADERS['blueprint_shader']:send('lightness_offset', lightness_offset)
+    -- G.SHADERS['blueprint_shader']:send('mode', coloring_mode)
+    -- G.SHADERS['blueprint_shader']:send('expo', power)
+    love.graphics.setShader( G.SHADERS['brainstorm_shader'] )
     
     -- Draw image with blueprint shader on new canvas
     love.graphics.draw( image )
