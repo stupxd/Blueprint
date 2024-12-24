@@ -2,14 +2,15 @@ local function asset_path(filename)
     return Blueprint.path.."/assets/"..G.SETTINGS.GRAPHICS.texture_scaling.."x/"..filename
 end
 
-local assets = {
-    {name = 'blue_brainstorm', path = asset_path('brainstormnt.png'), px = 71, py = 95},
-}
-
 local game_set_render_settings = Game.set_render_settings
 
 function Game:set_render_settings()
     game_set_render_settings(self)
+
+    -- G.SETTINGS.GRAPHICS.texture_scaling is not guaranteed to be correct outside of this function - Jonathan
+    local assets = {
+        {name = 'blue_brainstorm', path = asset_path('brainstormnt.png'), px = 71, py = 95},
+    }
 
     for i=1, #assets do
         G.ASSET_ATLAS[assets[i].name] = {}

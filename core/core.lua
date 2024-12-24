@@ -61,7 +61,8 @@ local function is_brainstorm(card)
     return card and card.config and card.config.center and card.config.center.key == 'j_brainstorm'
 end
 
-local function process_texture(image)
+
+local function process_texture_blueprint(image)
     local width, height = image:getDimensions()
     local canvas = love.graphics.newCanvas(width, height, {type = '2d', readable = true, dpiscale = image:getDPIScale()})
 
@@ -109,6 +110,45 @@ local function process_texture(image)
     return canvas
 end
 
+local function process_texture_brainstorm(image)
+    local width, height = image:getDimensions()
+    local canvas = love.graphics.newCanvas(width, height, {type = '2d', readable = true, dpiscale = image:getDPIScale()})
+
+    love.graphics.push("all")
+        
+    love.graphics.setCanvas( canvas )
+    love.graphics.clear(canvas_background_color)
+    
+    love.graphics.setColor(1, 1, 1, 1)
+
+    local bgImage = G.ASSET_ATLAS["blue_brainstorm"].image
+    bgImage:setWrap("repeat", "repeat")
+    local bgQuad = love.graphics.newQuad(0, 0, width, height, bgImage)
+    love.graphics.setShader()
+    -- love.graphics.draw(bgImage, 71 * 5, 95 * 10)
+    love.graphics.draw(bgImage, bgQuad)
+
+    G.SHADERS['brainstorm_shader']:send('dpi', image:getDPIScale())
+    G.SHADERS['brainstorm_shader']:send('greyscale_weights', {0.299, 0.587, 0.114})
+    G.SHADERS['brainstorm_shader']:send('blur_amount', 1)
+    G.SHADERS['brainstorm_shader']:send('card_size', {71, 95})
+    G.SHADERS['brainstorm_shader']:send('margin', {5, 5})
+    G.SHADERS['brainstorm_shader']:send('blue_low', {60.0/255.0, 100.0/255.0, 200.0/255.0, 0.4})
+    G.SHADERS['brainstorm_shader']:send('blue_high', {60.0/255.0, 100.0/255.0, 200.0/255.0, 0.8})
+    G.SHADERS['brainstorm_shader']:send('red_low', {200.0/255.0, 60.0/255.0, 70.0/255.0, 0.4})
+    G.SHADERS['brainstorm_shader']:send('red_high', {200.0/255.0, 60.0/255.0, 70.0/255.0, 0.8})
+    G.SHADERS['brainstorm_shader']:send('blue_threshold', 0.75)
+    G.SHADERS['brainstorm_shader']:send('red_threshold', 0.2)
+    love.graphics.setShader( G.SHADERS['brainstorm_shader'] )
+    
+    -- Draw image with blueprint shader on new canvas
+    love.graphics.draw( image )
+
+    love.graphics.pop()
+
+    return love.graphics.newImage(canvas:newImageData(), {mipmaps = true, dpiscale = image:getDPIScale()})
+end
+
 local function blueprint_atlas(a)
     local atlas = a.name or a.key
     local blueprinted = atlas.."_blueprinted"
@@ -120,10 +160,27 @@ local function blueprint_atlas(a)
         G.ASSET_ATLAS[blueprinted].type = G.ASSET_ATLAS[atlas].type
         G.ASSET_ATLAS[blueprinted].px = G.ASSET_ATLAS[atlas].px
         G.ASSET_ATLAS[blueprinted].py = G.ASSET_ATLAS[atlas].py
-        G.ASSET_ATLAS[blueprinted].image = process_texture(G.ASSET_ATLAS[atlas].image)
+        G.ASSET_ATLAS[blueprinted].image = process_texture_blueprint(G.ASSET_ATLAS[atlas].image)
     end
 
     return G.ASSET_ATLAS[blueprinted]
+end
+
+local function brainstorm_atlas(a)
+    local atlas = a.name or a.key
+    local brainstormed = atlas.."_brainstormed"
+
+    if not G.ASSET_ATLAS[brainstormed] then
+        G.ASSET_ATLAS[brainstormed] = {}
+        G.ASSET_ATLAS[brainstormed].brainstorm = true
+        G.ASSET_ATLAS[brainstormed].name = G.ASSET_ATLAS[atlas].name
+        G.ASSET_ATLAS[brainstormed].type = G.ASSET_ATLAS[atlas].type
+        G.ASSET_ATLAS[brainstormed].px = G.ASSET_ATLAS[atlas].px
+        G.ASSET_ATLAS[brainstormed].py = G.ASSET_ATLAS[atlas].py
+        G.ASSET_ATLAS[brainstormed].image = process_texture_brainstorm(G.ASSET_ATLAS[atlas].image)
+    end
+
+    return G.ASSET_ATLAS[brainstormed]
 end
 
 local function equal_sprites(first, second)
@@ -200,6 +257,56 @@ local function blueprint_sprite(blueprint, card)
     align_sprite(blueprint, card)
 end
 
+local function brainstorm_sprite(brainstorm, card)
+    if equal_sprites(brainstorm.children.center, card.children.center) then
+        if card.children.floating_sprite and not equal_sprites(brainstorm.children.floating_sprite, card.children.floating_sprite) then
+            -- brainstormed card has floating sprite, and floating sprites aren't equal
+            -- need to update!
+        else
+            return
+        end
+    end
+
+    -- Not copying any other joker's sprite at the moment. Cache current sprite before updating
+    -- I'm using blueprint_sprite_copy for both blueprint and brainstorm - Jonathan
+    if not brainstorm.blueprint_sprite_copy then
+        brainstorm.blueprint_sprite_copy = brainstorm.children.center
+    end
+    -- I'm using blueprint_copy_key for both blueprint and brainstorm - Jonathan
+    brainstorm.blueprint_copy_key = card.config.center.key
+
+    -- Make sure to remove floating sprite before applying new one
+    if brainstorm.children.floating_sprite then
+        brainstorm.children.floating_sprite:remove()
+        brainstorm.children.floating_sprite = nil
+    end
+
+    align_sprite(brainstorm, nil, true)
+
+    brainstorm.children.center = Sprite(brainstorm.T.x, brainstorm.T.y, brainstorm.T.w, brainstorm.T.h, brainstorm_atlas(card.children.center.atlas), card.children.center.sprite_pos)
+    brainstorm.children.center.states.hover = brainstorm.states.hover
+    brainstorm.children.center.states.click = brainstorm.states.click
+    brainstorm.children.center.states.drag = brainstorm.states.drag
+    brainstorm.children.center.states.collide.can = false
+    brainstorm.children.center:set_role({major = brainstorm, role_type = 'Glued', draw_major = brainstorm})
+
+    if card.children.floating_sprite then
+        brainstorm.children.floating_sprite = Sprite(brainstorm.T.x, brainstorm.T.y, brainstorm.T.w, brainstorm.T.h, brainstorm_atlas(card.children.floating_sprite.atlas), card.children.floating_sprite.sprite_pos)
+        brainstorm.children.floating_sprite.role.draw_major = brainstorm
+        brainstorm.children.floating_sprite.states.hover.can = false
+        brainstorm.children.floating_sprite.states.click.can = false
+    end
+
+    --if card.children.floating_sprite2 then
+    --    brainstorm.children.floating_sprite2 = Sprite(brainstorm.T.x, brainstorm.T.y, brainstorm.T.w, brainstorm.T.h, G.ASSET_ATLAS[card.children.floating_sprite2.atlas.name], card.children.floating_sprite2.sprite_pos)
+    --    brainstorm.children.floating_sprite2.role.draw_major = brainstorm
+    --    brainstorm.children.floating_sprite2.states.hover.can = false
+    --    brainstorm.children.floating_sprite2.states.click.can = false
+    --end
+    align_sprite(brainstorm, card)
+end
+
+-- for both blueprint and brainstorm - Jonathan
 local function restore_sprite(blueprint)
     if not blueprint.blueprint_sprite_copy then
         return
@@ -308,10 +415,11 @@ function CardArea:align_cards()
         for i = #G.jokers.cards, 1, -1  do
             current_joker = G.jokers.cards[i]
             if is_brainstorm(current_joker) then
-                if brainstormed_joker then
-                    -- brainstorm_sprite(current_joker, brainstormed_joker)
+                local should_copy = brainstormed_joker and not (use_debuff_logic and (current_joker.debuff or brainstormed_joker.debuff)) and brainstormed_joker.config.center.blueprint_compat and not current_joker.states.drag.is and (copy_when_highlighted or not current_joker.highlighted)
+                if should_copy then
+                    brainstorm_sprite(current_joker, brainstormed_joker)
                 else
-                    -- restore_sprite(current_joker)
+                    restore_sprite(current_joker)
                 end
 
             elseif is_blueprint(current_joker) then
