@@ -62,14 +62,14 @@ local function is_brainstorm(card)
 end
 
 local function process_texture(image)
-    local h, w = image:getDimensions()
-    local canvas = love.graphics.newCanvas(h, w, {type = '2d', readable = true})
+    local width, height = image:getDimensions()
+    local canvas = love.graphics.newCanvas(width, height, {type = '2d', readable = true, dpiscale = image:getDPIScale()})
 
-    love.graphics.push()
+    love.graphics.push("all")
     
     
     
-    local oldCanvas = love.graphics.getCanvas()
+    -- local oldCanvas = love.graphics.getCanvas()
     --local old_filter1, old_filter2 = image:getFilter()
     --local old_filter11, old_filter22 = love.graphics.getDefaultFilter()
     
@@ -92,8 +92,8 @@ local function process_texture(image)
     love.graphics.draw( image )
 
 
-    love.graphics.setShader()
-    love.graphics.setCanvas(oldCanvas)
+    -- love.graphics.setShader()
+    -- love.graphics.setCanvas(oldCanvas)
     --image:setFilter(old_filter1, old_filter2)
     --canvas:setFilter(image:getFilter())
     --love.graphics.setDefaultFilter(old_filter11, old_filter22)
@@ -103,7 +103,7 @@ local function process_texture(image)
     --local fileData = canvas:newImageData():encode('png', 'imblueeeeeedabudeedabudai.png')
 
     if true then
-        return love.graphics.newImage(canvas:newImageData()) --, {mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling}
+        return love.graphics.newImage(canvas:newImageData(), {mipmaps = true, dpiscale = image:getDPIScale()})
     end
 
     return canvas
