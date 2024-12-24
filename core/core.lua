@@ -196,7 +196,7 @@ local function brainstorm_atlas(a, f, offset)
         G.ASSET_ATLAS[brainstormed.new_name] = {}
         -- using .blueprint for this aswell - Jonathan
         G.ASSET_ATLAS[brainstormed.new_name].blueprint = true
-        G.ASSET_ATLAS[brainstormed.new_name].name = G.ASSET_ATLAS[brainstormed.old_name].name
+        G.ASSET_ATLAS[brainstormed.new_name].name = brainstormed.new_name--G.ASSET_ATLAS[brainstormed.old_name].name
         G.ASSET_ATLAS[brainstormed.new_name].type = G.ASSET_ATLAS[brainstormed.old_name].type
         G.ASSET_ATLAS[brainstormed.new_name].px = G.ASSET_ATLAS[brainstormed.old_name].px
         G.ASSET_ATLAS[brainstormed.new_name].py = G.ASSET_ATLAS[brainstormed.old_name].py
@@ -210,12 +210,10 @@ local function equal_sprites(first, second)
     if not first and not second then
         return true
     end
-    if not first and second then
+    if not (first and second) then
         return false
     end
-    if first and not second then
-        return false
-    end
+
     -- Dynamically update sprite for animated jokers & multiple blueprint copies
     return first.atlas.name == second.atlas.name and first.sprite_pos.x == second.sprite_pos.x and first.sprite_pos.y == second.sprite_pos.y
 end
@@ -298,59 +296,32 @@ local function brainstorm_sprite(brainstorm, card)
         -- print(offset.x, offset.y)
     end
 
-    if card.children.floating_sprite and pre_brainstormed(card.children.center.atlas, card.children.floating_sprite.atlas, offset).atlas or pre_brainstormed(card.children.center.atlas, nil, nil).atlas then
-        if equal_sprites(brainstorm.children.center, card.children.center) then
-            if equal_sprites(brainstorm.children.floating_sprite, card.children.floating_sprite) then
-                return
-            end
-        end
+    local needed_atlas = card.children.floating_sprite and brainstorm_atlas(card.children.center.atlas, card.children.floating_sprite.atlas, offset)
+                                                        or brainstorm_atlas(card.children.center.atlas, nil, nil)
+
+    if brainstorm.children.center.atlas.name == needed_atlas.name then
+        return
     end
 
     -- Not copying any other joker's sprite at the moment. Cache current sprite before updating
     -- I'm using blueprint_sprite_copy for both blueprint and brainstorm - Jonathan
     if not brainstorm.blueprint_sprite_copy then
         brainstorm.blueprint_sprite_copy = brainstorm.children.center
+    else
+        brainstorm.children.center:remove()
     end
     -- I'm using blueprint_copy_key for both blueprint and brainstorm - Jonathan
     brainstorm.blueprint_copy_key = card.config.center.key
 
-    -- Make sure to remove floating sprite before applying new one
-    if brainstorm.children.floating_sprite then
-        brainstorm.children.floating_sprite:remove()
-        brainstorm.children.floating_sprite = nil
-    end
+    align_sprite(brainstorm, nil, true) -- restore alignment
 
-    align_sprite(brainstorm, nil, true)
-
-    if card.children.floating_sprite then
-        brainstorm.children.center = Sprite(brainstorm.T.x, brainstorm.T.y, brainstorm.T.w, brainstorm.T.h, brainstorm_atlas(card.children.center.atlas, card.children.floating_sprite.atlas, offset), card.children.center.sprite_pos)
-    else
-        brainstorm.children.center = Sprite(brainstorm.T.x, brainstorm.T.y, brainstorm.T.w, brainstorm.T.h, brainstorm_atlas(card.children.center.atlas, nil, nil), card.children.center.sprite_pos)
-    end
+    brainstorm.children.center = Sprite(brainstorm.T.x, brainstorm.T.y, brainstorm.T.w, brainstorm.T.h, needed_atlas, card.children.center.sprite_pos)
     brainstorm.children.center.states.hover = brainstorm.states.hover
     brainstorm.children.center.states.click = brainstorm.states.click
     brainstorm.children.center.states.drag = brainstorm.states.drag
     brainstorm.children.center.states.collide.can = false
     brainstorm.children.center:set_role({major = brainstorm, role_type = 'Glued', draw_major = brainstorm})
 
-    -- if true and card.children.floating_sprite then
-    --     brainstorm.children.floating_sprite = Sprite(brainstorm.T.x, brainstorm.T.y, brainstorm.T.w, brainstorm.T.h, card.children.floating_sprite.atlas, card.children.floating_sprite.sprite_pos)
-    --     brainstorm.children.floating_sprite.role.draw_major = brainstorm
-    --     brainstorm.children.floating_sprite.states.hover.can = false
-    --     brainstorm.children.floating_sprite.states.click.can = false
-    -- elseif card.children.floating_sprite then
-    --     brainstorm.children.floating_sprite = Sprite(brainstorm.T.x, brainstorm.T.y, brainstorm.T.w, brainstorm.T.h, brainstorm_atlas(card.children.floating_sprite.atlas), card.children.floating_sprite.sprite_pos)
-    --     brainstorm.children.floating_sprite.role.draw_major = brainstorm
-    --     brainstorm.children.floating_sprite.states.hover.can = false
-    --     brainstorm.children.floating_sprite.states.click.can = false
-    -- end
-
-    --if card.children.floating_sprite2 then
-    --    brainstorm.children.floating_sprite2 = Sprite(brainstorm.T.x, brainstorm.T.y, brainstorm.T.w, brainstorm.T.h, G.ASSET_ATLAS[card.children.floating_sprite2.atlas.name], card.children.floating_sprite2.sprite_pos)
-    --    brainstorm.children.floating_sprite2.role.draw_major = brainstorm
-    --    brainstorm.children.floating_sprite2.states.hover.can = false
-    --    brainstorm.children.floating_sprite2.states.click.can = false
-    --end
     align_sprite(brainstorm, card)
 end
 
