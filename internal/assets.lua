@@ -2,22 +2,6 @@ local function asset_path(filename)
     return Blueprint.path.."/assets/"..G.SETTINGS.GRAPHICS.texture_scaling.."x/"..filename
 end
 
-local function unblueprint_atlas(a)
-    local atlas = a.name or a.key
-    local blueprinted = atlas.."_blueprinted"
-    if G.ASSET_ATLAS[blueprinted] then
-        G.ASSET_ATLAS[blueprinted] = nil
-    end
-end
-
-local function unbrainstorm_atlas(a)
-    local atlas = a.name or a.key
-    local brainstormed = atlas.."_brainstormed"
-    if G.ASSET_ATLAS[brainstormed] then
-        G.ASSET_ATLAS[brainstormed] = nil
-    end
-end
-
 local game_set_render_settings = Game.set_render_settings
 
 function Game:set_render_settings()
@@ -41,8 +25,9 @@ function Game:set_render_settings()
 
     -- the blueprint and brainstorm atlases might not be valid anymore - Jonathan
     for k, v in pairs(G.ASSET_ATLAS) do
-        unblueprint_atlas(v)
-        unbrainstorm_atlas(v)
+        if k:match("_blueprinted$") or k:match("_brainstormed$") then
+            G.ASSET_ATLAS[k] = nil
+        end
     end
 
     if Blueprint.brainstorm_sprite then
