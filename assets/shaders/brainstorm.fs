@@ -17,6 +17,7 @@ extern vec4 red_low;
 extern vec4 red_high;
 extern float blue_threshold;
 extern float red_threshold;
+// extern bool floating;
 
 float greyscale(vec4 col) {
     return dot(greyscale_weights, col.rgb);
@@ -132,6 +133,20 @@ vec4 mapcol(float v, ivec2 coords) {
     }
 }
 
+// bool is_floating_edge(sampler2D jokers_sampler, ivec2 texture_coords) {
+//     if (myTexelFetch(jokers_sampler, texture_coords, 0).a < 1.0) {
+//         return false;
+//     }
+//     for (int x = -1; x <= 1; x++) {
+//         for (int y = -1; y <= 1; y++) {
+//             if (myTexelFetch(jokers_sampler, texture_coords + ivec2(x, y), 0).a < 1.0) {
+//                 return true;
+//             }
+//         }
+//     }
+//     return false;
+// }
+
 vec4 effect( vec4 colour, sampler2D jokers_sampler, vec2 texture_coords, vec2 screen_coords )
 {
     // float col = greyscale(texture(jokers_sampler, texture_coords));
@@ -140,6 +155,9 @@ vec4 effect( vec4 colour, sampler2D jokers_sampler, vec2 texture_coords, vec2 sc
     // float col = gaussian_blur(jokers_sampler, absolute_texture_coords);
     // vec2 d = sobel_filter(jokers_sampler, absolute_texture_coords);
     float canny = canny_edges(jokers_sampler, absolute_texture_coords);
+    // if (floating && is_floating_edge(jokers_sampler, absolute_texture_coords)) {
+        // canny = 100.0;
+    // }
 
     vec4 cannycol = mapcol(canny, absolute_texture_coords);
     if (absolute_texture_coords.x % card_size.x < margin.x || absolute_texture_coords.x % card_size.x >= card_size.x - margin.x) {
@@ -149,7 +167,12 @@ vec4 effect( vec4 colour, sampler2D jokers_sampler, vec2 texture_coords, vec2 sc
         cannycol = vec4(0, 0, 0, 0);
     }
     
+    // if (floating) {
     return cannycol;
+        // return vec4(cannycol.rgb, min(cannycol.a, myTexelFetch(jokers_sampler, absolute_texture_coords, 0).a));
+    // } else {
+    //     return cannycol;
+    // }
 	// return texelFetch(jokers_sampler, absolute_texture_coords, 0);
 	// return texture(jokers_sampler, texture_coords);
 }

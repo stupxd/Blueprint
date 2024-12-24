@@ -90,80 +90,132 @@ local function process_texture_blueprint(image)
     return love.graphics.newImage(canvas:newImageData(), {mipmaps = true, dpiscale = image:getDPIScale()})
 end
 
-local function process_texture_brainstorm(image)
+local function process_texture_brainstorm(image, px, py, floating_image, offset)
     local width, height = image:getDimensions()
     local canvas = love.graphics.newCanvas(width, height, {type = '2d', readable = true, dpiscale = image:getDPIScale()})
 
     love.graphics.push("all")
-        
     love.graphics.setCanvas( canvas )
     love.graphics.clear(canvas_background_color)
-    
     love.graphics.setColor(1, 1, 1, 1)
 
-    --local bgImage = G.ASSET_ATLAS["blue_brainstorm"].image
-    --bgImage:setWrap("repeat", "repeat")
-    --local bgQuad = love.graphics.newQuad(0, 0, width, height, bgImage)
-    --love.graphics.setShader()
-    -- love.graphics.draw(bgImage, 71 * 5, 95 * 10)
-    --love.graphics.draw(bgImage, bgQuad)
+    love.graphics.setShader()
+    love.graphics.draw( image )
+    if floating_image and offset then
+        love.graphics.draw(floating_image, -offset.x, -offset.y)
+    end
+
+    love.graphics.pop()
+
+    local canvas2 = love.graphics.newCanvas(width, height, {type = '2d', readable = true, dpiscale = image:getDPIScale()})
+    love.graphics.push("all")
+    love.graphics.setCanvas( canvas2 )
+    love.graphics.clear(canvas_background_color)
+    love.graphics.setColor(1, 1, 1, 1)
 
     G.SHADERS['brainstorm_shader']:send('dpi', image:getDPIScale())
     G.SHADERS['brainstorm_shader']:send('greyscale_weights', {0.299, 0.587, 0.114})
     G.SHADERS['brainstorm_shader']:send('blur_amount', 1)
-    G.SHADERS['brainstorm_shader']:send('card_size', {71, 95})
+    G.SHADERS['brainstorm_shader']:send('card_size', {px, py})
     G.SHADERS['brainstorm_shader']:send('margin', {5, 5})
     G.SHADERS['brainstorm_shader']:send('blue_low', {60.0/255.0, 100.0/255.0, 200.0/255.0, 0.4})
     G.SHADERS['brainstorm_shader']:send('blue_high', {60.0/255.0, 100.0/255.0, 200.0/255.0, 0.8})
-    G.SHADERS['brainstorm_shader']:send('red_low', {200.0/255.0, 60.0/255.0, 70.0/255.0, 0.4})
-    G.SHADERS['brainstorm_shader']:send('red_high', {200.0/255.0, 60.0/255.0, 70.0/255.0, 0.8})
+    G.SHADERS['brainstorm_shader']:send('red_low', {255.0/255.0, 150.0/255.0, 0.0/255.0, 0.5})
+    G.SHADERS['brainstorm_shader']:send('red_high', {255.0/255.0, 80.0/255.0, 0.0/255.0, 0.9})
     G.SHADERS['brainstorm_shader']:send('blue_threshold', 0.75)
     G.SHADERS['brainstorm_shader']:send('red_threshold', 0.2)
-    love.graphics.setShader( G.SHADERS['brainstorm_shader'] )
     
-    -- Draw image with blueprint shader on new canvas
-    love.graphics.draw( image )
+    love.graphics.setShader(G.SHADERS['brainstorm_shader'])
+    love.graphics.draw(canvas)
 
     love.graphics.pop()
 
-    return love.graphics.newImage(canvas:newImageData(), {mipmaps = true, dpiscale = image:getDPIScale()})
+    return love.graphics.newImage(canvas2:newImageData(), {mipmaps = true, dpiscale = image:getDPIScale()})
+end
+
+
+local function pre_blueprinted(a)
+    local atlas = a.name or a.key
+    local name = atlas.."_".."blueprinted"
+    if G.ASSET_ATLAS[name] then
+        return {
+            old_name = atlas,
+            new_name = name,
+            atlas = G.ASSET_ATLAS[name],
+        }
+    else
+        return {
+            old_name = atlas,
+            new_name = name,
+            atlas = nil
+        }
+    end
+end
+
+local function pre_brainstormed(a, f, offset)
+    local atlas = a.name or a.key
+    local floating_atlas = f and (f.name or f.key) or "nil"
+    local name = atlas.."_"..floating_atlas.."_"..(offset and offset.x or "nil").."_"..(offset and offset.y or "nil").."_".."brainstormed"
+    if G.ASSET_ATLAS[name] then
+        return {
+            old_name = atlas,
+            old_floating_name = floating_atlas,
+            new_name = name,
+            atlas = G.ASSET_ATLAS[name],
+        }
+    else
+        return {
+            old_name = atlas,
+            old_floating_name = floating_atlas,
+            new_name = name,
+            atlas = nil
+        }
+    end
 end
 
 local function blueprint_atlas(a)
-    local atlas = a.name or a.key
-    local blueprinted = atlas.."_blueprinted"
+    local blueprinted = pre_blueprinted(a)
 
-    if not G.ASSET_ATLAS[blueprinted] then
-        G.ASSET_ATLAS[blueprinted] = {}
-        G.ASSET_ATLAS[blueprinted].blueprint = true
-        G.ASSET_ATLAS[blueprinted].name = G.ASSET_ATLAS[atlas].name
-        G.ASSET_ATLAS[blueprinted].type = G.ASSET_ATLAS[atlas].type
-        G.ASSET_ATLAS[blueprinted].px = G.ASSET_ATLAS[atlas].px
-        G.ASSET_ATLAS[blueprinted].py = G.ASSET_ATLAS[atlas].py
-        G.ASSET_ATLAS[blueprinted].image = process_texture_blueprint(G.ASSET_ATLAS[atlas].image)
+    if not blueprinted.atlas then
+        G.ASSET_ATLAS[blueprinted.new_name] = {}
+        G.ASSET_ATLAS[blueprinted.new_name].blueprint = true
+        G.ASSET_ATLAS[blueprinted.new_name].name = G.ASSET_ATLAS[blueprinted.old_name].name
+        G.ASSET_ATLAS[blueprinted.new_name].type = G.ASSET_ATLAS[blueprinted.old_name].type
+        G.ASSET_ATLAS[blueprinted.new_name].px = G.ASSET_ATLAS[blueprinted.old_name].px
+        G.ASSET_ATLAS[blueprinted.new_name].py = G.ASSET_ATLAS[blueprinted.old_name].py
+        G.ASSET_ATLAS[blueprinted.new_name].image = process_texture_blueprint(G.ASSET_ATLAS[blueprinted.old_name].image)
     end
 
-    return G.ASSET_ATLAS[blueprinted]
+    return G.ASSET_ATLAS[blueprinted.new_name]
 end
 
-local function brainstorm_atlas(a)
-    local atlas = a.name or a.key
-    local brainstormed = atlas.."_brainstormed"
+local function brainstorm_atlas(a, f, offset)
+    local brainstormed = pre_brainstormed(a, f, offset)
 
-    if not G.ASSET_ATLAS[brainstormed] then
-        G.ASSET_ATLAS[brainstormed] = {}
-        G.ASSET_ATLAS[brainstormed].brainstorm = true
-        G.ASSET_ATLAS[brainstormed].name = G.ASSET_ATLAS[atlas].name
-        G.ASSET_ATLAS[brainstormed].type = G.ASSET_ATLAS[atlas].type
-        G.ASSET_ATLAS[brainstormed].px = G.ASSET_ATLAS[atlas].px
-        G.ASSET_ATLAS[brainstormed].py = G.ASSET_ATLAS[atlas].py
-        G.ASSET_ATLAS[brainstormed].image = process_texture_brainstorm(G.ASSET_ATLAS[atlas].image)
+    if not brainstormed.atlas then
+        G.ASSET_ATLAS[brainstormed.new_name] = {}
+        -- using .blueprint for this aswell - Jonathan
+        G.ASSET_ATLAS[brainstormed.new_name].blueprint = true
+        G.ASSET_ATLAS[brainstormed.new_name].name = G.ASSET_ATLAS[brainstormed.old_name].name
+        G.ASSET_ATLAS[brainstormed.new_name].type = G.ASSET_ATLAS[brainstormed.old_name].type
+        G.ASSET_ATLAS[brainstormed.new_name].px = G.ASSET_ATLAS[brainstormed.old_name].px
+        G.ASSET_ATLAS[brainstormed.new_name].py = G.ASSET_ATLAS[brainstormed.old_name].py
+        G.ASSET_ATLAS[brainstormed.new_name].image = process_texture_brainstorm(G.ASSET_ATLAS[brainstormed.old_name].image, G.ASSET_ATLAS[brainstormed.old_name].px, G.ASSET_ATLAS[brainstormed.old_name].py, f and G.ASSET_ATLAS[brainstormed.old_floating_name].image or nil, offset)
     end
 
-    return G.ASSET_ATLAS[brainstormed]
+    return G.ASSET_ATLAS[brainstormed.new_name]
 end
 
 local function equal_sprites(first, second)
+    if not first and not second then
+        return true
+    end
+    if not first and second then
+        return false
+    end
+    if first and not second then
+        return false
+    end
     -- Dynamically update sprite for animated jokers & multiple blueprint copies
     return first.atlas.name == second.atlas.name and first.sprite_pos.x == second.sprite_pos.x and first.sprite_pos.y == second.sprite_pos.y
 end
@@ -191,15 +243,14 @@ local function align_sprite(self, card, restore)
 end
 
 local function blueprint_sprite(blueprint, card)
-    if equal_sprites(blueprint.children.center, card.children.center) then
-        if card.children.floating_sprite and not equal_sprites(blueprint.children.floating_sprite, card.children.floating_sprite) then
-            -- blueprinted card has floating sprite, and floating sprites aren't equal
-            -- need to update!
-        else
-            return
+    if pre_blueprinted(card.children.center.atlas).atlas then
+        if equal_sprites(blueprint.children.center, card.children.center) then
+            if equal_sprites(blueprint.children.floating_sprite, card.children.floating_sprite) then
+                return
+            end
         end
     end
-
+        
     -- Not copying any other joker's sprite at the moment. Cache current sprite before updating
     if not blueprint.blueprint_sprite_copy then
         blueprint.blueprint_sprite_copy = blueprint.children.center
@@ -238,12 +289,20 @@ local function blueprint_sprite(blueprint, card)
 end
 
 local function brainstorm_sprite(brainstorm, card)
-    if equal_sprites(brainstorm.children.center, card.children.center) then
-        if card.children.floating_sprite and not equal_sprites(brainstorm.children.floating_sprite, card.children.floating_sprite) then
-            -- brainstormed card has floating sprite, and floating sprites aren't equal
-            -- need to update!
-        else
-            return
+    local offset = nil
+    if card.children.floating_sprite then
+        offset = {}
+        offset.x = card.children.floating_sprite.sprite_pos.x * card.children.floating_sprite.atlas.px - card.children.center.sprite_pos.x * card.children.center.atlas.px
+        offset.y = card.children.floating_sprite.sprite_pos.y * card.children.floating_sprite.atlas.py - card.children.center.sprite_pos.y * card.children.center.atlas.py
+        -- print(card.children.floating_sprite.sprite_pos.x - card.children.center.sprite_pos.x, card.children.floating_sprite.sprite_pos.y - card.children.center.sprite_pos.y)
+        -- print(offset.x, offset.y)
+    end
+
+    if card.children.floating_sprite and pre_brainstormed(card.children.center.atlas, card.children.floating_sprite.atlas, offset).atlas or pre_brainstormed(card.children.center.atlas, nil, nil).atlas then
+        if equal_sprites(brainstorm.children.center, card.children.center) then
+            if equal_sprites(brainstorm.children.floating_sprite, card.children.floating_sprite) then
+                return
+            end
         end
     end
 
@@ -263,24 +322,28 @@ local function brainstorm_sprite(brainstorm, card)
 
     align_sprite(brainstorm, nil, true)
 
-    brainstorm.children.center = Sprite(brainstorm.T.x, brainstorm.T.y, brainstorm.T.w, brainstorm.T.h, brainstorm_atlas(card.children.center.atlas), card.children.center.sprite_pos)
+    if card.children.floating_sprite then
+        brainstorm.children.center = Sprite(brainstorm.T.x, brainstorm.T.y, brainstorm.T.w, brainstorm.T.h, brainstorm_atlas(card.children.center.atlas, card.children.floating_sprite.atlas, offset), card.children.center.sprite_pos)
+    else
+        brainstorm.children.center = Sprite(brainstorm.T.x, brainstorm.T.y, brainstorm.T.w, brainstorm.T.h, brainstorm_atlas(card.children.center.atlas, nil, nil), card.children.center.sprite_pos)
+    end
     brainstorm.children.center.states.hover = brainstorm.states.hover
     brainstorm.children.center.states.click = brainstorm.states.click
     brainstorm.children.center.states.drag = brainstorm.states.drag
     brainstorm.children.center.states.collide.can = false
     brainstorm.children.center:set_role({major = brainstorm, role_type = 'Glued', draw_major = brainstorm})
 
-    if true and card.children.floating_sprite then
-        brainstorm.children.floating_sprite = Sprite(brainstorm.T.x, brainstorm.T.y, brainstorm.T.w, brainstorm.T.h, card.children.floating_sprite.atlas, card.children.floating_sprite.sprite_pos)
-        brainstorm.children.floating_sprite.role.draw_major = brainstorm
-        brainstorm.children.floating_sprite.states.hover.can = false
-        brainstorm.children.floating_sprite.states.click.can = false
-    elseif card.children.floating_sprite then
-        brainstorm.children.floating_sprite = Sprite(brainstorm.T.x, brainstorm.T.y, brainstorm.T.w, brainstorm.T.h, brainstorm_atlas(card.children.floating_sprite.atlas), card.children.floating_sprite.sprite_pos)
-        brainstorm.children.floating_sprite.role.draw_major = brainstorm
-        brainstorm.children.floating_sprite.states.hover.can = false
-        brainstorm.children.floating_sprite.states.click.can = false
-    end
+    -- if true and card.children.floating_sprite then
+    --     brainstorm.children.floating_sprite = Sprite(brainstorm.T.x, brainstorm.T.y, brainstorm.T.w, brainstorm.T.h, card.children.floating_sprite.atlas, card.children.floating_sprite.sprite_pos)
+    --     brainstorm.children.floating_sprite.role.draw_major = brainstorm
+    --     brainstorm.children.floating_sprite.states.hover.can = false
+    --     brainstorm.children.floating_sprite.states.click.can = false
+    -- elseif card.children.floating_sprite then
+    --     brainstorm.children.floating_sprite = Sprite(brainstorm.T.x, brainstorm.T.y, brainstorm.T.w, brainstorm.T.h, brainstorm_atlas(card.children.floating_sprite.atlas), card.children.floating_sprite.sprite_pos)
+    --     brainstorm.children.floating_sprite.role.draw_major = brainstorm
+    --     brainstorm.children.floating_sprite.states.hover.can = false
+    --     brainstorm.children.floating_sprite.states.click.can = false
+    -- end
 
     --if card.children.floating_sprite2 then
     --    brainstorm.children.floating_sprite2 = Sprite(brainstorm.T.x, brainstorm.T.y, brainstorm.T.w, brainstorm.T.h, G.ASSET_ATLAS[card.children.floating_sprite2.atlas.name], card.children.floating_sprite2.sprite_pos)
