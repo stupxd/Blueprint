@@ -49,7 +49,9 @@ function Game:set_render_settings()
         Blueprint.brainstorm_sprite:remove()
     end
 
-    Blueprint.brainstorm_sprite = Sprite(0, 0, G.CARD_W, G.CARD_H, G.ASSET_ATLAS["blue_brainstorm"], {x=0, y=0})
+    -- using some extra padding to fix this issue where the sticking out parts on the brainstormnt are pixelated
+    -- because they are right on the edge of the image - Jonathan
+    Blueprint.brainstorm_sprite = Sprite(0, 0, G.CARD_W, G.CARD_H, G.ASSET_ATLAS["blue_brainstorm"], {x=1, y=1})
 end
 
 function Blueprint.load_shaders()

@@ -103,12 +103,12 @@ local function process_texture_brainstorm(image)
     
     love.graphics.setColor(1, 1, 1, 1)
 
-    --local bgImage = G.ASSET_ATLAS["blue_brainstorm"].image
-    --bgImage:setWrap("repeat", "repeat")
-    --local bgQuad = love.graphics.newQuad(0, 0, width, height, bgImage)
-    --love.graphics.setShader()
+    -- local bgImage = G.ASSET_ATLAS["blue_brainstorm"].image
+    -- bgImage:setWrap("repeat", "repeat")
+    -- local bgQuad = love.graphics.newQuad(0, 0, width, height, bgImage)
+    -- love.graphics.setShader()
     -- love.graphics.draw(bgImage, 71 * 5, 95 * 10)
-    --love.graphics.draw(bgImage, bgQuad)
+    -- love.graphics.draw(bgImage, bgQuad)
 
     G.SHADERS['brainstorm_shader']:send('dpi', image:getDPIScale())
     G.SHADERS['brainstorm_shader']:send('greyscale_weights', {0.299, 0.587, 0.114})
