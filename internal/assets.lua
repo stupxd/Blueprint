@@ -2,6 +2,22 @@ local function asset_path(filename)
     return Blueprint.path.."/assets/"..G.SETTINGS.GRAPHICS.texture_scaling.."x/"..filename
 end
 
+local function unblueprint_atlas(a)
+    local atlas = a.name or a.key
+    local blueprinted = atlas.."_blueprinted"
+    if G.ASSET_ATLAS[blueprinted] then
+        G.ASSET_ATLAS[blueprinted] = nil
+    end
+end
+
+local function unbrainstorm_atlas(a)
+    local atlas = a.name or a.key
+    local brainstormed = atlas.."_brainstormed"
+    if G.ASSET_ATLAS[brainstormed] then
+        G.ASSET_ATLAS[brainstormed] = nil
+    end
+end
+
 local game_set_render_settings = Game.set_render_settings
 
 function Game:set_render_settings()
@@ -21,6 +37,12 @@ function Game:set_render_settings()
         G.ASSET_ATLAS[assets[i].name].image = love.graphics.newImage(image_data, {mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling})
         G.ASSET_ATLAS[assets[i].name].px = assets[i].px
         G.ASSET_ATLAS[assets[i].name].py = assets[i].py
+    end
+
+    -- the blueprint and brainstorm atlases might not be valid anymore - Jonathan
+    for k, v in pairs(G.ASSET_ATLAS) do
+        unblueprint_atlas(v)
+        unbrainstorm_atlas(v)
     end
 
     if Blueprint.brainstorm_sprite then
