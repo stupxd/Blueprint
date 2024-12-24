@@ -12,4 +12,5 @@ Dynamically changes blueprint texture to the joker it is copying.
 
 
 ## Credits
+- [Jonathan](https://github.com/jonathandw743) for adding dynamic Brainstorm joker, as well as a few crucial bugfixes.
 - GoldenDiscoPig for suggesting the idea in Balatro discord.

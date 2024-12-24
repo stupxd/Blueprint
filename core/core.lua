@@ -61,23 +61,16 @@ local function is_brainstorm(card)
     return card and card.config and card.config.center and card.config.center.key == 'j_brainstorm'
 end
 
+Blueprint.is_blueprint = is_blueprint
+Blueprint.is_brainstorm = is_brainstorm
+
 
 local function process_texture_blueprint(image)
     local width, height = image:getDimensions()
     local canvas = love.graphics.newCanvas(width, height, {type = '2d', readable = true, dpiscale = image:getDPIScale()})
 
     love.graphics.push("all")
-    
-    
-    
-    -- local oldCanvas = love.graphics.getCanvas()
-    --local old_filter1, old_filter2 = image:getFilter()
-    --local old_filter11, old_filter22 = love.graphics.getDefaultFilter()
-    
-    -- I dont think changing filter does anything.. the image still looks blurry
-    --image:setFilter("nearest", "nearest")
-    --canvas:setFilter("nearest", "nearest")
-    --love.graphics.setDefaultFilter("nearest", "nearest")
+
     love.graphics.setCanvas( canvas )
     love.graphics.clear(canvas_background_color)
     
@@ -92,22 +85,9 @@ local function process_texture_blueprint(image)
     -- Draw image with blueprint shader on new canvas
     love.graphics.draw( image )
 
-
-    -- love.graphics.setShader()
-    -- love.graphics.setCanvas(oldCanvas)
-    --image:setFilter(old_filter1, old_filter2)
-    --canvas:setFilter(image:getFilter())
-    --love.graphics.setDefaultFilter(old_filter11, old_filter22)
-
     love.graphics.pop()
 
-    --local fileData = canvas:newImageData():encode('png', 'imblueeeeeedabudeedabudai.png')
-
-    if true then
-        return love.graphics.newImage(canvas:newImageData(), {mipmaps = true, dpiscale = image:getDPIScale()})
-    end
-
-    return canvas
+    return love.graphics.newImage(canvas:newImageData(), {mipmaps = true, dpiscale = image:getDPIScale()})
 end
 
 local function process_texture_brainstorm(image)
@@ -121,12 +101,12 @@ local function process_texture_brainstorm(image)
     
     love.graphics.setColor(1, 1, 1, 1)
 
-    local bgImage = G.ASSET_ATLAS["blue_brainstorm"].image
-    bgImage:setWrap("repeat", "repeat")
-    local bgQuad = love.graphics.newQuad(0, 0, width, height, bgImage)
-    love.graphics.setShader()
+    --local bgImage = G.ASSET_ATLAS["blue_brainstorm"].image
+    --bgImage:setWrap("repeat", "repeat")
+    --local bgQuad = love.graphics.newQuad(0, 0, width, height, bgImage)
+    --love.graphics.setShader()
     -- love.graphics.draw(bgImage, 71 * 5, 95 * 10)
-    love.graphics.draw(bgImage, bgQuad)
+    --love.graphics.draw(bgImage, bgQuad)
 
     G.SHADERS['brainstorm_shader']:send('dpi', image:getDPIScale())
     G.SHADERS['brainstorm_shader']:send('greyscale_weights', {0.299, 0.587, 0.114})
@@ -290,7 +270,12 @@ local function brainstorm_sprite(brainstorm, card)
     brainstorm.children.center.states.collide.can = false
     brainstorm.children.center:set_role({major = brainstorm, role_type = 'Glued', draw_major = brainstorm})
 
-    if card.children.floating_sprite then
+    if true and card.children.floating_sprite then
+        brainstorm.children.floating_sprite = Sprite(brainstorm.T.x, brainstorm.T.y, brainstorm.T.w, brainstorm.T.h, card.children.floating_sprite.atlas, card.children.floating_sprite.sprite_pos)
+        brainstorm.children.floating_sprite.role.draw_major = brainstorm
+        brainstorm.children.floating_sprite.states.hover.can = false
+        brainstorm.children.floating_sprite.states.click.can = false
+    elseif card.children.floating_sprite then
         brainstorm.children.floating_sprite = Sprite(brainstorm.T.x, brainstorm.T.y, brainstorm.T.w, brainstorm.T.h, brainstorm_atlas(card.children.floating_sprite.atlas), card.children.floating_sprite.sprite_pos)
         brainstorm.children.floating_sprite.role.draw_major = brainstorm
         brainstorm.children.floating_sprite.states.hover.can = false

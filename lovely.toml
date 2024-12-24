@@ -65,21 +65,6 @@ match_indent = true
 #'''
 #match_indent = true
 
-#[[patches]]
-#[patches.pattern]
-#target = "card.lua"
-#pattern = '''
-#self.children.center:draw_shader('dissolve')'''
-#position = "at"
-#payload = '''
-#if self.blueprint_sprite_copy and not self.edition then
-#    self.children.center:draw_shader('blueprint_shader')
-#else
-#    self.children.center:draw_shader('dissolve')
-#end
-#'''
-#match_indent = true
-
 [[patches]]
 [patches.pattern]
 target = "card.lua"
@@ -104,3 +89,71 @@ payload = '''
     end
 '''
 match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = '''
+G.shared_shadow = self.sprite_facing == 'front' and self.children.center or self.children.back'''
+position = "before"
+payload = '''
+if self.blueprint_sprite_copy and Blueprint.is_brainstorm(self) then
+    Blueprint.brainstorm_sprite.role.draw_major = self
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = '''
+G.shared_shadow:draw_shader('dissolve', self.shadow_height)'''
+position = "at"
+payload = '''
+if self.blueprint_sprite_copy and Blueprint.is_brainstorm(self) then
+    Blueprint.brainstorm_sprite.role.draw_major = self
+    Blueprint.brainstorm_sprite.ARGS.draw_from_offset = nil
+    local other_obj = self.children.center
+    -- shadow_height doesn't work when drawing sprite from other_obj, so we have to add offsets manually
+    local scale = other_obj.VT.scale*0.2*self.shadow_height
+    local rotation = nil
+    local dx = - other_obj.shadow_parrallax.x*self.shadow_height
+    local dy = - other_obj.shadow_parrallax.y*self.shadow_height
+
+    Blueprint.brainstorm_sprite:draw_shader('dissolve', self.shadow_height, nil, nil, other_obj, scale, rotation, dx, dy)
+else
+    G.shared_shadow:draw_shader('dissolve', self.shadow_height)
+end
+'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = '''
+self.children.center:draw_shader('dissolve')'''
+position = "before"
+payload = '''
+if self.blueprint_sprite_copy and Blueprint.is_brainstorm(self) then
+    Blueprint.brainstorm_sprite:draw_shader('dissolve', nil, nil, nil, self.children.center)
+end
+'''
+match_indent = true
+
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = '''
+(?<indent>[ \t]*)self\.children\.center:draw_shader\((?<args_center>[^\n]*)\)
+[ \t]*if self\.children\.front(?<then>[^\n]*)
+[ \t]*    self\.children\.front:draw_shader(?<args_front>[^\n]*)
+[ \t]*end'''
+position = "before"
+payload = '''
+if self.blueprint_sprite_copy and Blueprint.is_brainstorm(self) then
+    Blueprint.brainstorm_sprite:draw_shader($args_center, nil, self.children.center)
+end
+'''
+line_prepend = '$indent'
+
+
+

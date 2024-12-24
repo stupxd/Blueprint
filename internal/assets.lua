@@ -22,6 +22,12 @@ function Game:set_render_settings()
         G.ASSET_ATLAS[assets[i].name].px = assets[i].px
         G.ASSET_ATLAS[assets[i].name].py = assets[i].py
     end
+
+    if Blueprint.brainstorm_sprite then
+        Blueprint.brainstorm_sprite:remove()
+    end
+
+    Blueprint.brainstorm_sprite = Sprite(0, 0, G.CARD_W, G.CARD_H, G.ASSET_ATLAS["blue_brainstorm"], {x=0, y=0})
 end
 
 function Blueprint.load_shaders()
