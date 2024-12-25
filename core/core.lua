@@ -299,7 +299,7 @@ local function brainstorm_sprite(brainstorm, card)
     local needed_atlas = card.children.floating_sprite and brainstorm_atlas(card.children.center.atlas, card.children.floating_sprite.atlas, offset)
                                                         or brainstorm_atlas(card.children.center.atlas, nil, nil)
     
-    if brainstorm.children.center.atlas.name == needed_atlas.name and card.T.x == brainstorm.T.x and card.T.y == brainstorm.T.y then
+    if brainstorm.children.center.atlas.name == needed_atlas.name and card.children.center.sprite_pos.x == brainstorm.children.center.sprite_pos.x and card.children.center.sprite_pos.y == brainstorm.children.center.sprite_pos.y then
         return
     end
 
