@@ -64,7 +64,6 @@ end
 Blueprint.is_blueprint = is_blueprint
 Blueprint.is_brainstorm = is_brainstorm
 
-
 local function process_texture_blueprint(image)
     local width, height = image:getDimensions()
     local canvas = love.graphics.newCanvas(width, height, {type = '2d', readable = true, dpiscale = image:getDPIScale()})
@@ -349,18 +348,13 @@ local function restore_sprite(blueprint)
     align_sprite(blueprint, nil, true)
 end
 
-local sprite_reset = Sprite.reset
-function Sprite:reset()
-    if self.atlas.blueprint then
-        if type(self.atlas.release) == "function" then
-            self.atlas:release()
-        end
-        self.atlas = blueprint_atlas(self.atlas)
-        self:set_sprite_pos(self.sprite_pos)
-        return
+local card_draw = Card.draw
+function Card:draw(...)
+    if self.blueprint_sprite_copy and self.children.center.atlas.released then
+        restore_sprite(self)
     end
-    
-    return sprite_reset(self)
+
+    return card_draw(self, ...)
 end
 
 local function find_brainstormed_joker()

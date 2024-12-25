@@ -24,8 +24,10 @@ function Game:set_render_settings()
     end
 
     -- the blueprint and brainstorm atlases might not be valid anymore - Jonathan
-    for k, v in pairs(G.ASSET_ATLAS) do
+    for k, atlas in pairs(G.ASSET_ATLAS) do
         if k:match("_blueprinted$") or k:match("_brainstormed$") then
+            atlas.released = true
+            atlas.image:release()
             G.ASSET_ATLAS[k] = nil
         end
     end
