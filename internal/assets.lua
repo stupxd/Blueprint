@@ -43,6 +43,24 @@ end
 
 function Blueprint.load_shaders()
     G.SHADERS['blueprint_shader'] = love.graphics.newShader(Blueprint.load_mod_file("assets/shaders/blueprint.fs", "blueprint-shader", true))
-    G.SHADERS['brainstorm_shader'] = love.graphics.newShader(Blueprint.load_mod_file("assets/shaders/brainstorm.fs", "brainstorm-shader", true))
-    Blueprint.log "Loaded shaders"
+    local success, err = pcall(function ()
+        G.SHADERS['brainstorm_shader'] = love.graphics.newShader(Blueprint.load_mod_file("assets/shaders/brainstorm.fs", "brainstorm-shader", true))
+    end)
+    if success then
+        print "Loaded all Blueprint mod shaders successfully"
+        Blueprint.brainstorm_enabled = true
+    else
+        Blueprint.brainstorm_enabled = false
+        print (
+[[
+
+=========================================================================
+Loaded Blueprint shader, but Brainstorm seems to be unsupported by your system!
+
+]]..err..[[
+
+=========================================================================
+
+]])
+    end
 end
