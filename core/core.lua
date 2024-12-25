@@ -112,15 +112,16 @@ local function process_texture_brainstorm(image, px, py, floating_image, offset)
     love.graphics.clear(canvas_background_color)
     love.graphics.setColor(1, 1, 1, 1)
 
-    G.SHADERS['brainstorm_shader']:send('dpi', image:getDPIScale())
+    -- G.SHADERS['brainstorm_shader']:send('dpi', image:getDPIScale())
+    G.SHADERS['brainstorm_shader']:send('texture_size', {width, height})
     G.SHADERS['brainstorm_shader']:send('greyscale_weights', {0.299, 0.587, 0.114})
     G.SHADERS['brainstorm_shader']:send('blur_amount', 1)
     G.SHADERS['brainstorm_shader']:send('card_size', {px, py})
     G.SHADERS['brainstorm_shader']:send('margin', {5, 5})
     G.SHADERS['brainstorm_shader']:send('blue_low', {60.0/255.0, 100.0/255.0, 200.0/255.0, 0.4})
     G.SHADERS['brainstorm_shader']:send('blue_high', {60.0/255.0, 100.0/255.0, 200.0/255.0, 0.8})
-    G.SHADERS['brainstorm_shader']:send('red_low', {255.0/255.0, 150.0/255.0, 0.0/255.0, 0.5})
-    G.SHADERS['brainstorm_shader']:send('red_high', {255.0/255.0, 80.0/255.0, 0.0/255.0, 0.9})
+    G.SHADERS['brainstorm_shader']:send('red_low', {255.0/255.0, 80.0/255.0, 0.0/255.0, 0.5})
+    G.SHADERS['brainstorm_shader']:send('red_high', {255.0/255.0, 80.0/255.0, 20.0/255.0, 0.9})
     G.SHADERS['brainstorm_shader']:send('blue_threshold', 0.75)
     G.SHADERS['brainstorm_shader']:send('red_threshold', 0.2)
     
@@ -297,8 +298,8 @@ local function brainstorm_sprite(brainstorm, card)
 
     local needed_atlas = card.children.floating_sprite and brainstorm_atlas(card.children.center.atlas, card.children.floating_sprite.atlas, offset)
                                                         or brainstorm_atlas(card.children.center.atlas, nil, nil)
-
-    if brainstorm.children.center.atlas.name == needed_atlas.name then
+    
+    if brainstorm.children.center.atlas.name == needed_atlas.name and card.children.center.sprite_pos.x == brainstorm.children.center.sprite_pos.x and card.children.center.sprite_pos.y == brainstorm.children.center.sprite_pos.y then
         return
     end
 
