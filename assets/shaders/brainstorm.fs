@@ -1,12 +1,10 @@
-#pragma language glsl3
-
 #if __VERSION__ > 100 || defined(GL_FRAGMENT_PRECISION_HIGH)
 	#define PRECISION highp
 #else
 	#define PRECISION mediump
 #endif
 
-extern int dpi;
+// extern int dpi;
 extern vec3 greyscale_weights;
 extern int blur_amount;
 extern ivec2 card_size;
@@ -18,16 +16,19 @@ extern vec4 red_high;
 extern float blue_threshold;
 extern float red_threshold;
 // extern bool floating;
+extern vec2 texture_size;
 
 float greyscale(vec4 col) {
     return dot(greyscale_weights, col.rgb);
 }
 
-vec4 myTexelFetch(sampler2D s, ivec2 c, int l) {
-    return texelFetch(s, c * dpi, l);
+vec4 myTexelFetch(Image s, ivec2 c) {
+    // return texelFetch(s, c * dpi, l);
+    vec2 uv = (vec2(c) + vec2(0.5)) / texture_size;
+    return Texel(s, uv);
 }
 
-float gaussian_blur(sampler2D jokers_sampler, ivec2 texture_coords) {
+float gaussian_blur(Image jokers_sampler, ivec2 texture_coords) {
 	float col = 0.0;
     float total = 0.0;
     for (int x = -blur_amount; x <= blur_amount; x++) {
@@ -39,7 +40,7 @@ float gaussian_blur(sampler2D jokers_sampler, ivec2 texture_coords) {
             else {
                 factor = exp(-dot(offset, offset) / float(blur_amount * blur_amount));
             }
-            col += greyscale(myTexelFetch(jokers_sampler, texture_coords + offset, 0)) * factor;
+            col += greyscale(myTexelFetch(jokers_sampler, texture_coords + offset)) * factor;
             total += factor;
         }
     }
@@ -67,7 +68,7 @@ vec3 sobel_kernely[sobel_kernel_length] = vec3[sobel_kernel_length] (
     vec3(1, 1, 1)
 );
 
-vec2 sobel_filter(sampler2D jokers_sampler, ivec2 texture_coords) {
+vec2 sobel_filter(Image jokers_sampler, ivec2 texture_coords) {
     vec2 d = vec2(0);
     for (int i = 0; i < sobel_kernel_length; i++) {
         d.x += gaussian_blur(jokers_sampler, texture_coords + ivec2(sobel_kernelx[i].xy)) * sobel_kernelx[i].z;
@@ -78,7 +79,7 @@ vec2 sobel_filter(sampler2D jokers_sampler, ivec2 texture_coords) {
 
 #define pi 3.14159265359
 
-float canny_edges(sampler2D jokers_sampler, ivec2 texture_coords) {
+float canny_edges(Image jokers_sampler, ivec2 texture_coords) {
     vec2 d = sobel_filter(jokers_sampler, texture_coords);
     float g = length(d);
     float t = atan(d.y / d.x);
@@ -133,7 +134,7 @@ vec4 mapcol(float v, ivec2 coords) {
     }
 }
 
-// bool is_floating_edge(sampler2D jokers_sampler, ivec2 texture_coords) {
+// bool is_floating_edge(Image jokers_sampler, ivec2 texture_coords) {
 //     if (myTexelFetch(jokers_sampler, texture_coords, 0).a < 1.0) {
 //         return false;
 //     }
@@ -147,11 +148,11 @@ vec4 mapcol(float v, ivec2 coords) {
 //     return false;
 // }
 
-vec4 effect( vec4 colour, sampler2D jokers_sampler, vec2 texture_coords, vec2 screen_coords )
+vec4 effect( vec4 colour, Image jokers_sampler, vec2 texture_coords, vec2 screen_coords )
 {
     // float col = greyscale(texture(jokers_sampler, texture_coords));
 
-	ivec2 absolute_texture_coords = ivec2(texture_coords * textureSize(jokers_sampler, 0)) / dpi;
+	ivec2 absolute_texture_coords = ivec2(texture_coords * texture_size);
     // float col = gaussian_blur(jokers_sampler, absolute_texture_coords);
     // vec2 d = sobel_filter(jokers_sampler, absolute_texture_coords);
     float canny = canny_edges(jokers_sampler, absolute_texture_coords);
@@ -160,10 +161,10 @@ vec4 effect( vec4 colour, sampler2D jokers_sampler, vec2 texture_coords, vec2 sc
     // }
 
     vec4 cannycol = mapcol(canny, absolute_texture_coords);
-    if (absolute_texture_coords.x % card_size.x < margin.x || absolute_texture_coords.x % card_size.x >= card_size.x - margin.x) {
+    if (mod(absolute_texture_coords.x, card_size.x) < margin.x || mod(absolute_texture_coords.x, card_size.x) >= card_size.x - margin.x) {
         cannycol = vec4(0, 0, 0, 0);
     }
-    if (absolute_texture_coords.y % card_size.y < margin.y || absolute_texture_coords.y % card_size.y >= card_size.y - margin.y) {
+    if (mod(absolute_texture_coords.y, card_size.y) < margin.y || mod(absolute_texture_coords.y, card_size.y) >= card_size.y - margin.y) {
         cannycol = vec4(0, 0, 0, 0);
     }
     
