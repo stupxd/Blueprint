@@ -61,6 +61,11 @@ local function is_brainstorm(card)
     return card and card.config and card.config.center and card.config.center.key == 'j_brainstorm'
 end
 
+-- Check to show original blueprint texture when it's dragged or highlighted
+local function show_texture(current_joker)
+    return not current_joker.states.drag.is and (copy_when_highlighted or not current_joker.highlighted)
+end
+
 Blueprint.is_blueprint = is_blueprint
 Blueprint.is_brainstorm = is_brainstorm
 
@@ -394,7 +399,7 @@ local function find_blueprinted_joker(current_joker, previous_joker)
         end
     end
     if not previous_joker then
-        return
+        return nil
     end
 
     if use_debuff_logic then
@@ -409,7 +414,7 @@ local function find_blueprinted_joker(current_joker, previous_joker)
         end
     end
 
-    local should_copy = previous_joker.config.center.blueprint_compat and not current_joker.states.drag.is and (copy_when_highlighted or not current_joker.highlighted)
+    local should_copy = previous_joker.config.center.blueprint_compat
     if should_copy then
         return previous_joker
     end
@@ -429,8 +434,8 @@ function CardArea:align_cards()
         for i = #G.jokers.cards, 1, -1  do
             current_joker = G.jokers.cards[i]
             if is_brainstorm(current_joker) then
-                local should_copy = brainstormed_joker and not (use_debuff_logic and (current_joker.debuff or brainstormed_joker.debuff)) and brainstormed_joker.config.center.blueprint_compat and not current_joker.states.drag.is and (copy_when_highlighted or not current_joker.highlighted)
-                if Blueprint.brainstorm_enabled and should_copy then
+                local should_copy = brainstormed_joker and not (use_debuff_logic and (current_joker.debuff or brainstormed_joker.debuff)) and brainstormed_joker.config.center.blueprint_compat
+                if Blueprint.brainstorm_enabled and should_copy and show_texture(current_joker) then
                     brainstorm_sprite(current_joker, brainstormed_joker)
                 else
                     restore_sprite(current_joker)
@@ -439,7 +444,7 @@ function CardArea:align_cards()
             elseif is_blueprint(current_joker) then
                 previous_joker = find_blueprinted_joker(current_joker, previous_joker)
 
-                if previous_joker then
+                if previous_joker and show_texture(current_joker) then
                     blueprint_sprite(current_joker, previous_joker)
                 else
                     restore_sprite(current_joker)
