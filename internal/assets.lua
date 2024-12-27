@@ -10,6 +10,7 @@ function Game:set_render_settings()
     -- G.SETTINGS.GRAPHICS.texture_scaling is not guaranteed to be correct outside of this function - Jonathan
     local assets = {
         {name = 'blue_brainstorm', path = asset_path('brainstormnt.png'), px = 71, py = 95},
+        {name = 'blue_brainstorm_single', path = asset_path('brainstormnt_single.png'), px = 71, py = 95},
     }
 
     for i=1, #assets do
