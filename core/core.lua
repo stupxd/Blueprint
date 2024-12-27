@@ -121,26 +121,26 @@ local function process_texture_brainstorm(image, px, py, floating_image, offset)
 
     local canvas2 = love.graphics.newCanvas(width * 2, height * 2, {type = '2d', readable = true, dpiscale = image:getDPIScale()})
     love.graphics.push("all")
-    love.graphics.setCanvas( canvas2 )
+    love.graphics.setCanvas(canvas2)
     love.graphics.clear(canvas_background_color)
     love.graphics.setColor(1, 1, 1, 1)
 
 
     -- local bgImage = love.graphics.newImage(brainstormnt_canvas:newImageData(), {mipmaps = true, dpiscale = image:getDPIScale()})
-    -- local brainstormnt_canvas = love.graphics.newCanvas(px * 2, py * 2, {type = '2d', readable = true, dpiscale = image:getDPIScale()})
-    -- love.graphics.push("all")
-    -- love.graphics.setCanvas( brainstormnt_canvas )
-    -- love.graphics.clear(canvas_background_color)
-    -- love.graphics.setColor(1, 1, 1, 1)
-    -- love.graphics.draw(G.ASSET_ATLAS["blue_brainstorm_single"].image, 0, 0)
-    -- love.graphics.pop()
+    local brainstormnt_canvas = love.graphics.newCanvas(px * 2, py * 2, {type = '2d', readable = true, dpiscale = image:getDPIScale()})
+    love.graphics.push("all")
+    love.graphics.setCanvas( brainstormnt_canvas )
+    love.graphics.clear(canvas_background_color)
+    love.graphics.setColor(1, 1, 1, 1)
+    love.graphics.draw(G.ASSET_ATLAS["blue_brainstorm_single"].image, 0, 0)
+    love.graphics.pop()
 
-    local bgImage = G.ASSET_ATLAS["blue_brainstorm_single"].image
-    bgImage:setWrap("repeat", "repeat")
-    local bgQuad = love.graphics.newQuad(0, 0, width, height, bgImage)
+    -- local bgImage = G.ASSET_ATLAS["blue_brainstorm_single"].image
+    brainstormnt_canvas:setWrap("repeat", "repeat")
+    local bgQuad = love.graphics.newQuad(0, 0, width * 2, height * 2, brainstormnt_canvas)
     love.graphics.setShader()
     -- love.graphics.draw(bgImage, 71 * 5, 95 * 10)
-    love.graphics.draw(bgImage, bgQuad)
+    love.graphics.draw(brainstormnt_canvas, bgQuad)
 
     -- G.SHADERS['brainstorm_shader']:send('dpi', image:getDPIScale())
     G.SHADERS['brainstorm_shader']:send('texture_size', {width * 2, height * 2})
