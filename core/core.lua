@@ -53,6 +53,9 @@ canvas_background_color = {
     0
 }
 
+
+local extra_brainstormnt_margin = 10
+
 local function is_blueprint(card)
     return card and card.config and card.config.center and card.config.center.key == 'j_blueprint'
 end
@@ -129,7 +132,7 @@ local function process_texture_brainstorm(image, px, py, floating_image, offset)
     G.SHADERS['brainstorm_shader']:send('greyscale_weights', {0.299, 0.587, 0.114})
     G.SHADERS['brainstorm_shader']:send('blur_amount', 1)
     G.SHADERS['brainstorm_shader']:send('card_size', {px, py})
-    G.SHADERS['brainstorm_shader']:send('margin', {5, 5})
+    G.SHADERS['brainstorm_shader']:send('margin', {15, 15})
     G.SHADERS['brainstorm_shader']:send('blue_low', {60.0/255.0, 100.0/255.0, 200.0/255.0, 0.4})
     G.SHADERS['brainstorm_shader']:send('blue_high', {60.0/255.0, 100.0/255.0, 200.0/255.0, 0.8})
     G.SHADERS['brainstorm_shader']:send('red_low', {200.0/255.0, 100.0/255.0, 60.0/255.0, 0.4})
@@ -210,9 +213,9 @@ local function brainstorm_atlas(a, f, offset)
         G.ASSET_ATLAS[brainstormed.new_name].blueprint = true
         G.ASSET_ATLAS[brainstormed.new_name].name = brainstormed.new_name--G.ASSET_ATLAS[brainstormed.old_name].name
         G.ASSET_ATLAS[brainstormed.new_name].type = G.ASSET_ATLAS[brainstormed.old_name].type
-        G.ASSET_ATLAS[brainstormed.new_name].px = G.ASSET_ATLAS[brainstormed.old_name].px
-        G.ASSET_ATLAS[brainstormed.new_name].py = G.ASSET_ATLAS[brainstormed.old_name].py
-        G.ASSET_ATLAS[brainstormed.new_name].image = process_texture_brainstorm(G.ASSET_ATLAS[brainstormed.old_name].image, G.ASSET_ATLAS[brainstormed.old_name].px, G.ASSET_ATLAS[brainstormed.old_name].py, f and G.ASSET_ATLAS[brainstormed.old_floating_name].image or nil, offset)
+        G.ASSET_ATLAS[brainstormed.new_name].px = G.ASSET_ATLAS[brainstormed.old_name].px + extra_brainstormnt_margin * 2
+        G.ASSET_ATLAS[brainstormed.new_name].py = G.ASSET_ATLAS[brainstormed.old_name].py + extra_brainstormnt_margin * 2
+        G.ASSET_ATLAS[brainstormed.new_name].image = process_texture_brainstorm(G.ASSET_ATLAS[brainstormed.old_name].image, G.ASSET_ATLAS[brainstormed.new_name].px, G.ASSET_ATLAS[brainstormed.new_name].py, f and G.ASSET_ATLAS[brainstormed.old_floating_name].image or nil, offset)
     end
 
     return G.ASSET_ATLAS[brainstormed.new_name]
@@ -302,8 +305,12 @@ local function brainstorm_sprite(brainstorm, card)
     local offset = nil
     if card.children.floating_sprite then
         offset = {}
-        offset.x = card.children.floating_sprite.sprite_pos.x * card.children.floating_sprite.atlas.px - card.children.center.sprite_pos.x * card.children.center.atlas.px
-        offset.y = card.children.floating_sprite.sprite_pos.y * card.children.floating_sprite.atlas.py - card.children.center.sprite_pos.y * card.children.center.atlas.py
+        offset.x =
+            (card.children.floating_sprite.sprite_pos.x * (card.children.floating_sprite.atlas.px + extra_brainstormnt_margin * 2)) -
+            (card.children.center.sprite_pos.x *          (card.children.center.atlas.px +          extra_brainstormnt_margin * 2))
+        offset.y =
+            (card.children.floating_sprite.sprite_pos.y * (card.children.floating_sprite.atlas.py + extra_brainstormnt_margin * 2)) -
+            (card.children.center.sprite_pos.y *          (card.children.center.atlas.py +          extra_brainstormnt_margin * 2))
         -- print(card.children.floating_sprite.sprite_pos.x - card.children.center.sprite_pos.x, card.children.floating_sprite.sprite_pos.y - card.children.center.sprite_pos.y)
         -- print(offset.x, offset.y)
     end
@@ -327,7 +334,11 @@ local function brainstorm_sprite(brainstorm, card)
 
     align_sprite(brainstorm, nil, true) -- restore alignment
 
-    brainstorm.children.center = Sprite(brainstorm.T.x, brainstorm.T.y, brainstorm.T.w, brainstorm.T.h, needed_atlas, card.children.center.sprite_pos)
+    brainstorm.children.center = Sprite(
+        brainstorm.T.x + extra_brainstormnt_margin * 2 + extra_brainstormnt_margin,
+        brainstorm.T.y + extra_brainstormnt_margin * 2 + extra_brainstormnt_margin,
+        brainstorm.T.w, brainstorm.T.h,
+        needed_atlas, card.children.center.sprite_pos)
     brainstorm.children.center.states.hover = brainstorm.states.hover
     brainstorm.children.center.states.click = brainstorm.states.click
     brainstorm.children.center.states.drag = brainstorm.states.drag
