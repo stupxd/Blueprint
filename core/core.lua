@@ -96,54 +96,35 @@ local function process_texture_blueprint(image)
 end
 
 local function process_texture_brainstorm(image, px, py, floating_image, offset)
-
     local width, height = image:getDimensions()
-    local canvas = love.graphics.newCanvas(width * 2, height * 2, {type = '2d', readable = true, dpiscale = image:getDPIScale()})
+    local canvas = love.graphics.newCanvas(width, height, {type = '2d', readable = true, dpiscale = image:getDPIScale()})
 
     love.graphics.push("all")
-    love.graphics.setCanvas( canvas )
+    love.graphics.setCanvas(canvas)
     love.graphics.clear(canvas_background_color)
     love.graphics.setColor(1, 1, 1, 1)
 
-    love.graphics.setShader()
-    for x = 0, width, px do
-        for y = 0, height, py do
-            local quad = love.graphics.newQuad(x, y, px, py, image)
-            love.graphics.draw(image, quad, x * 2, y * 2)
-            if floating_image and offset then
-                local quad = love.graphics.newQuad(x + offset.x, y + offset.y, px, py, floating_image)
-                love.graphics.draw(floating_image, quad, x * 2, y * 2)
-            end
-        end
+    love.graphics.draw(image)
+    if floating_image and offset then
+        love.graphics.draw(floating_image, -offset.x, -offset.y)
     end
 
     love.graphics.pop()
-
-    local canvas2 = love.graphics.newCanvas(width * 2, height * 2, {type = '2d', readable = true, dpiscale = image:getDPIScale()})
+    
+    local canvas2 = love.graphics.newCanvas(width, height, {type = '2d', readable = true, dpiscale = image:getDPIScale()})
     love.graphics.push("all")
     love.graphics.setCanvas(canvas2)
     love.graphics.clear(canvas_background_color)
     love.graphics.setColor(1, 1, 1, 1)
-
-
-    -- local bgImage = love.graphics.newImage(brainstormnt_canvas:newImageData(), {mipmaps = true, dpiscale = image:getDPIScale()})
-    local brainstormnt_canvas = love.graphics.newCanvas(px * 2, py * 2, {type = '2d', readable = true, dpiscale = image:getDPIScale()})
-    love.graphics.push("all")
-    love.graphics.setCanvas( brainstormnt_canvas )
-    love.graphics.clear(canvas_background_color)
-    love.graphics.setColor(1, 1, 1, 1)
-    love.graphics.draw(G.ASSET_ATLAS["blue_brainstorm_single"].image, 0, 0)
-    love.graphics.pop()
-
-    -- local bgImage = G.ASSET_ATLAS["blue_brainstorm_single"].image
-    brainstormnt_canvas:setWrap("repeat", "repeat")
-    local bgQuad = love.graphics.newQuad(0, 0, width * 2, height * 2, brainstormnt_canvas)
+    
+    local bgImage = G.ASSET_ATLAS["blue_brainstorm_single"].image
+    bgImage:setWrap("repeat", "repeat")
+    local bgQuad = love.graphics.newQuad(0, 0, width, height, bgImage)
     love.graphics.setShader()
-    -- love.graphics.draw(bgImage, 71 * 5, 95 * 10)
-    love.graphics.draw(brainstormnt_canvas, bgQuad)
+    love.graphics.draw(bgImage, bgQuad)
 
     -- G.SHADERS['brainstorm_shader']:send('dpi', image:getDPIScale())
-    G.SHADERS['brainstorm_shader']:send('texture_size', {width * 2, height * 2})
+    G.SHADERS['brainstorm_shader']:send('texture_size', {width, height})
     G.SHADERS['brainstorm_shader']:send('greyscale_weights', {0.299, 0.587, 0.114})
     G.SHADERS['brainstorm_shader']:send('blur_amount', 1)
     G.SHADERS['brainstorm_shader']:send('card_size', {px, py})
@@ -353,7 +334,7 @@ local function brainstorm_sprite(brainstorm, card)
         brainstorm.T.x,
         brainstorm.T.y,
         brainstorm.T.w, brainstorm.T.h,
-        needed_atlas, {x = card.children.center.sprite_pos.x * 2, y = card.children.center.sprite_pos.y * 2})
+        needed_atlas, {x = card.children.center.sprite_pos.x, y = card.children.center.sprite_pos.y})
     brainstorm.children.center.states.hover = brainstorm.states.hover
     brainstorm.children.center.states.click = brainstorm.states.click
     brainstorm.children.center.states.drag = brainstorm.states.drag
