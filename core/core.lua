@@ -225,6 +225,7 @@ end
 
 
 local function align_sprite(self, card, restore)
+    --if is_brainstorm(self) then return end -- this should never affect brainstorm
     if restore then
         if self.blueprint_T then
             self.T.h = self.blueprint_T.h
@@ -318,16 +319,12 @@ local function brainstorm_sprite(brainstorm, card)
     -- I'm using blueprint_copy_key for both blueprint and brainstorm - Jonathan
     brainstorm.blueprint_copy_key = card.config.center.key
 
-    align_sprite(brainstorm, nil, true) -- restore alignment
-
     brainstorm.children.center = Sprite(brainstorm.T.x, brainstorm.T.y, brainstorm.T.w, brainstorm.T.h, needed_atlas, card.children.center.sprite_pos)
     brainstorm.children.center.states.hover = brainstorm.states.hover
     brainstorm.children.center.states.click = brainstorm.states.click
     brainstorm.children.center.states.drag = brainstorm.states.drag
     brainstorm.children.center.states.collide.can = false
     brainstorm.children.center:set_role({major = brainstorm, role_type = 'Glued', draw_major = brainstorm})
-
-    align_sprite(brainstorm, card)
 end
 
 -- for both blueprint and brainstorm - Jonathan
