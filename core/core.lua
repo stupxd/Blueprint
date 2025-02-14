@@ -53,6 +53,7 @@ canvas_background_color = {
     0
 }
 
+
 local function is_blueprint(card)
     return card and card.config and card.config.center and card.config.center.key == 'j_blueprint'
 end
@@ -99,23 +100,28 @@ local function process_texture_brainstorm(image, px, py, floating_image, offset)
     local canvas = love.graphics.newCanvas(width, height, {type = '2d', readable = true, dpiscale = image:getDPIScale()})
 
     love.graphics.push("all")
-    love.graphics.setCanvas( canvas )
+    love.graphics.setCanvas(canvas)
     love.graphics.clear(canvas_background_color)
     love.graphics.setColor(1, 1, 1, 1)
 
-    love.graphics.setShader()
-    love.graphics.draw( image )
+    love.graphics.draw(image)
     if floating_image and offset then
         love.graphics.draw(floating_image, -offset.x, -offset.y)
     end
 
     love.graphics.pop()
-
+    
     local canvas2 = love.graphics.newCanvas(width, height, {type = '2d', readable = true, dpiscale = image:getDPIScale()})
     love.graphics.push("all")
-    love.graphics.setCanvas( canvas2 )
+    love.graphics.setCanvas(canvas2)
     love.graphics.clear(canvas_background_color)
     love.graphics.setColor(1, 1, 1, 1)
+    
+    local bgImage = G.ASSET_ATLAS["blue_brainstorm_single"].image
+    bgImage:setWrap("repeat", "repeat")
+    local bgQuad = love.graphics.newQuad(0, 0, width, height, bgImage)
+    love.graphics.setShader()
+    love.graphics.draw(bgImage, bgQuad)
 
     -- G.SHADERS['brainstorm_shader']:send('dpi', image:getDPIScale())
     G.SHADERS['brainstorm_shader']:send('texture_size', {width, height})
@@ -125,8 +131,8 @@ local function process_texture_brainstorm(image, px, py, floating_image, offset)
     G.SHADERS['brainstorm_shader']:send('margin', {5, 5})
     G.SHADERS['brainstorm_shader']:send('blue_low', {60.0/255.0, 100.0/255.0, 200.0/255.0, 0.4})
     G.SHADERS['brainstorm_shader']:send('blue_high', {60.0/255.0, 100.0/255.0, 200.0/255.0, 0.8})
-    G.SHADERS['brainstorm_shader']:send('red_low', {255.0/255.0, 80.0/255.0, 0.0/255.0, 0.5})
-    G.SHADERS['brainstorm_shader']:send('red_high', {255.0/255.0, 80.0/255.0, 20.0/255.0, 0.9})
+    G.SHADERS['brainstorm_shader']:send('red_low', {200.0/255.0, 60.0/255.0, 60.0/255.0, 0.4})
+    G.SHADERS['brainstorm_shader']:send('red_high', {200.0/255.0, 60.0/255.0, 60.0/255.0, 0.8})
     G.SHADERS['brainstorm_shader']:send('blue_threshold', 0.75)
     G.SHADERS['brainstorm_shader']:send('red_threshold', 0.2)
     
@@ -205,7 +211,7 @@ local function brainstorm_atlas(a, f, offset)
         G.ASSET_ATLAS[brainstormed.new_name].type = G.ASSET_ATLAS[brainstormed.old_name].type
         G.ASSET_ATLAS[brainstormed.new_name].px = G.ASSET_ATLAS[brainstormed.old_name].px
         G.ASSET_ATLAS[brainstormed.new_name].py = G.ASSET_ATLAS[brainstormed.old_name].py
-        G.ASSET_ATLAS[brainstormed.new_name].image = process_texture_brainstorm(G.ASSET_ATLAS[brainstormed.old_name].image, G.ASSET_ATLAS[brainstormed.old_name].px, G.ASSET_ATLAS[brainstormed.old_name].py, f and G.ASSET_ATLAS[brainstormed.old_floating_name].image or nil, offset)
+        G.ASSET_ATLAS[brainstormed.new_name].image = process_texture_brainstorm(G.ASSET_ATLAS[brainstormed.old_name].image, G.ASSET_ATLAS[brainstormed.new_name].px, G.ASSET_ATLAS[brainstormed.new_name].py, f and G.ASSET_ATLAS[brainstormed.old_floating_name].image or nil, offset)
     end
 
     return G.ASSET_ATLAS[brainstormed.new_name]
@@ -296,8 +302,12 @@ local function brainstorm_sprite(brainstorm, card)
     local offset = nil
     if card.children.floating_sprite then
         offset = {}
-        offset.x = card.children.floating_sprite.sprite_pos.x * card.children.floating_sprite.atlas.px - card.children.center.sprite_pos.x * card.children.center.atlas.px
-        offset.y = card.children.floating_sprite.sprite_pos.y * card.children.floating_sprite.atlas.py - card.children.center.sprite_pos.y * card.children.center.atlas.py
+        offset.x =
+            (card.children.floating_sprite.sprite_pos.x * card.children.floating_sprite.atlas.px) -
+            (card.children.center.sprite_pos.x * card.children.center.atlas.px)
+        offset.y =
+            (card.children.floating_sprite.sprite_pos.y * card.children.floating_sprite.atlas.py) -
+            (card.children.center.sprite_pos.y * card.children.center.atlas.py)
         -- print(card.children.floating_sprite.sprite_pos.x - card.children.center.sprite_pos.x, card.children.floating_sprite.sprite_pos.y - card.children.center.sprite_pos.y)
         -- print(offset.x, offset.y)
     end
@@ -319,7 +329,11 @@ local function brainstorm_sprite(brainstorm, card)
     -- I'm using blueprint_copy_key for both blueprint and brainstorm - Jonathan
     brainstorm.blueprint_copy_key = card.config.center.key
 
-    brainstorm.children.center = Sprite(brainstorm.T.x, brainstorm.T.y, brainstorm.T.w, brainstorm.T.h, needed_atlas, card.children.center.sprite_pos)
+    brainstorm.children.center = Sprite(
+        brainstorm.T.x,
+        brainstorm.T.y,
+        brainstorm.T.w, brainstorm.T.h,
+        needed_atlas, {x = card.children.center.sprite_pos.x, y = card.children.center.sprite_pos.y})
     brainstorm.children.center.states.hover = brainstorm.states.hover
     brainstorm.children.center.states.click = brainstorm.states.click
     brainstorm.children.center.states.drag = brainstorm.states.drag
