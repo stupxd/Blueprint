@@ -64,7 +64,7 @@ end
 
 -- Check to show original blueprint texture when it's dragged or highlighted
 local function show_texture(current_joker)
-    return not current_joker.states.drag.is and (copy_when_highlighted or not current_joker.highlighted)
+    return current_joker.facing == 'front' and not current_joker.states.drag.is and (copy_when_highlighted or not current_joker.highlighted)
 end
 
 Blueprint.is_blueprint = is_blueprint
