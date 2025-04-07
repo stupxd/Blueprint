@@ -1,6 +1,7 @@
 
 return {
     INTERNAL_debug = false,
-    hello = true,
+    brainstorm = true,
+    blueprint = true,
 }
 

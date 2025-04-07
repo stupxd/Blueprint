@@ -147,7 +147,7 @@ end
 
 local function pre_blueprinted(a)
     local atlas = a.name or a.key
-    local name = atlas.."_".."blueprinted"
+    local name = atlas.."_blueprinted"
     if G.ASSET_ATLAS[name] then
         return {
             old_name = atlas,
@@ -166,7 +166,7 @@ end
 local function pre_brainstormed(a, f, offset)
     local atlas = a.name or a.key
     local floating_atlas = f and (f.name or f.key) or "nil"
-    local name = atlas.."_"..floating_atlas.."_"..(offset and offset.x or "nil").."_"..(offset and offset.y or "nil").."_".."brainstormed"
+    local name = string.format("%s_(%s_%s_%s)_brainstormed", atlas, floating_atlas, (offset and tostring(offset.x) or "nil"), (offset and tostring(offset.y) or "nil"))
     if G.ASSET_ATLAS[name] then
         return {
             old_name = atlas,
@@ -444,7 +444,7 @@ function CardArea:align_cards()
         local current_joker = nil
         for i = #G.jokers.cards, 1, -1  do
             current_joker = G.jokers.cards[i]
-            if is_brainstorm(current_joker) then
+            if Blueprint.SETTINGS.brainstorm and is_brainstorm(current_joker) then
                 local should_copy = brainstormed_joker and not (use_debuff_logic and (current_joker.debuff or brainstormed_joker.debuff)) and brainstormed_joker.config.center.blueprint_compat
                 if Blueprint.brainstorm_enabled and should_copy and show_texture(current_joker) then
                     brainstorm_sprite(current_joker, brainstormed_joker)
@@ -452,7 +452,7 @@ function CardArea:align_cards()
                     restore_sprite(current_joker)
                 end
 
-            elseif is_blueprint(current_joker) then
+            elseif Blueprint.SETTINGS.blueprint and is_blueprint(current_joker) then
                 previous_joker = find_blueprinted_joker(current_joker, previous_joker)
 
                 if previous_joker and show_texture(current_joker) then

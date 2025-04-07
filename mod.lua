@@ -6,7 +6,7 @@
 --- PRIORITY: 69
 --- BADGE_COLOR: 4B69CF
 --- DISPLAY_NAME: Blueprint
---- VERSION: 3.2
+--- VERSION: 3.3
 
 ----------------------------------------------
 ------------MOD CODE -------------------------
@@ -35,6 +35,28 @@ SMODS.DrawStep {
     end,
     conditions = { vortex = false, facing = 'front', blueprint_sprite_copy = true },
 }
+
+SMODS.current_mod.config_tab = function()
+    return {n = G.UIT.ROOT, config = {r = 0.1, align = "cm", padding = 0.1, colour = G.C.BLACK, minw = 8, minh = 6}, nodes = {
+        {n = G.UIT.R, config = {align = "cl", padding = 0}, nodes = {
+            {n = G.UIT.C, config = { align = "c", padding = 0 }, nodes = {
+                { n = G.UIT.T, config = { text = "Brainstorm", scale = 0.35, colour = G.C.UI.TEXT_LIGHT }},
+            }},
+            {n = G.UIT.C, config = { align = "cl", padding = 0.05 }, nodes = {
+                create_toggle{ col = true, label = "", scale = 0.85, w = 0, shadow = true, ref_table = Blueprint.SETTINGS, ref_value = 'brainstorm' },
+            }},
+        }},
+        {n = G.UIT.R, config = {align = "cl", padding = 0}, nodes = {
+            {n = G.UIT.C, config = { align = "c", padding = 0 }, nodes = {
+                { n = G.UIT.T, config = { text = "Blueprint", scale = 0.35, colour = G.C.UI.TEXT_LIGHT }},
+            }},
+            {n = G.UIT.C, config = { align = "cl", padding = 0.05 }, nodes = {
+                create_toggle{ col = true, label = "", scale = 0.85, w = 0, shadow = true, ref_table = Blueprint.SETTINGS, ref_value = 'blueprint' },
+            }},
+        }},
+    }}
+end
+
 
 ----------------------------------------------
 ------------MOD CODE END----------------------
