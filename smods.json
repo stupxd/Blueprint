@@ -1,0 +1,10 @@
+{
+	"id": "Blueprint",
+	"name": "Blueprint",
+	"display_name": "Blueprint",
+	"author": ["stupxd aka stupid", "Jonathan"],
+	"description": "Dynamically change Blueprint & Brainstorm textures.",
+	"prefix": "Blueprint",
+	"main_file": "smods.lua",
+	"version": "0.1.0"
+}
