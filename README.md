@@ -1,14 +1,14 @@
 ## Requirements
 - [Lovely](https://github.com/ethangreen-dev/lovely-injector) - a Balatro injector.
 
-## Installation
+## Manual Installation
 1. Install [Lovely](https://github.com/ethangreen-dev/lovely-injector?tab=readme-ov-file#manual-installation).
 2. Download the [latest release](https://github.com/stupxd/Blueprint/releases/) of this mod.
 3. Unzip the folder, and move it into the `%appdata%/Balatro/Mods` folder.
 4. Restart the game to load the mod.
 
 ## Features
-Dynamically changes blueprint texture to the joker it is copying.
+Dynamically changes Blueprint and Brainstorm textures to the joker they are copying.
 
 
 ## Credits
