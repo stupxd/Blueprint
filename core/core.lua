@@ -95,7 +95,22 @@ local function process_texture_blueprint(image)
     return love.graphics.newImage(canvas:newImageData(), {mipmaps = true, dpiscale = image:getDPIScale()})
 end
 
-local function process_texture_brainstorm(image, px, py, floating_image, offset)
+local function scaled_bg_image(h_scale)
+    local base_image = G.ASSET_ATLAS["blue_brainstorm_single"].image
+    local width, height = base_image:getDimensions()
+
+    local canvas = love.graphics.newCanvas(width, height, {type = '2d', readable = true, dpiscale = base_image:getDPIScale()})
+    love.graphics.push("all")
+
+    love.graphics.setCanvas(canvas)
+    love.graphics.scale(1, h_scale)
+    love.graphics.draw(base_image)
+
+    love.graphics.pop()
+    return love.graphics.newImage(canvas:newImageData(), {mipmaps = true, dpiscale = base_image:getDPIScale()})
+end
+
+local function process_texture_brainstorm(image, px, py, floating_image, offset, h_scale)
     local width, height = image:getDimensions()
     local canvas = love.graphics.newCanvas(width, height, {type = '2d', readable = true, dpiscale = image:getDPIScale()})
 
@@ -117,7 +132,7 @@ local function process_texture_brainstorm(image, px, py, floating_image, offset)
     love.graphics.clear(canvas_background_color)
     love.graphics.setColor(1, 1, 1, 1)
     
-    local bgImage = G.ASSET_ATLAS["blue_brainstorm_single"].image
+    local bgImage = scaled_bg_image(h_scale)
     bgImage:setWrap("repeat", "repeat")
     local bgQuad = love.graphics.newQuad(0, 0, width, height, bgImage)
     love.graphics.setShader()
@@ -163,10 +178,10 @@ local function pre_blueprinted(a)
     end
 end
 
-local function pre_brainstormed(a, f, offset)
+local function pre_brainstormed(a, f, offset, h_scale)
     local atlas = a.name or a.key
     local floating_atlas = f and (f.name or f.key) or "nil"
-    local name = string.format("%s_(%s_%s_%s)_brainstormed", atlas, floating_atlas, (offset and tostring(offset.x) or "nil"), (offset and tostring(offset.y) or "nil"))
+    local name = string.format("%s_(%s_%s_%s_%s)_brainstormed", atlas, floating_atlas, (offset and tostring(offset.x) or "nil"), (offset and tostring(offset.y) or "nil"), h_scale)
     if G.ASSET_ATLAS[name] then
         return {
             old_name = atlas,
@@ -200,8 +215,8 @@ local function blueprint_atlas(a)
     return G.ASSET_ATLAS[blueprinted.new_name]
 end
 
-local function brainstorm_atlas(a, f, offset)
-    local brainstormed = pre_brainstormed(a, f, offset)
+local function brainstorm_atlas(a, f, offset, h_scale)
+    local brainstormed = pre_brainstormed(a, f, offset, h_scale)
 
     if not brainstormed.atlas then
         G.ASSET_ATLAS[brainstormed.new_name] = {}
@@ -211,7 +226,7 @@ local function brainstorm_atlas(a, f, offset)
         G.ASSET_ATLAS[brainstormed.new_name].type = G.ASSET_ATLAS[brainstormed.old_name].type
         G.ASSET_ATLAS[brainstormed.new_name].px = G.ASSET_ATLAS[brainstormed.old_name].px
         G.ASSET_ATLAS[brainstormed.new_name].py = G.ASSET_ATLAS[brainstormed.old_name].py
-        G.ASSET_ATLAS[brainstormed.new_name].image = process_texture_brainstorm(G.ASSET_ATLAS[brainstormed.old_name].image, G.ASSET_ATLAS[brainstormed.new_name].px, G.ASSET_ATLAS[brainstormed.new_name].py, f and G.ASSET_ATLAS[brainstormed.old_floating_name].image or nil, offset)
+        G.ASSET_ATLAS[brainstormed.new_name].image = process_texture_brainstorm(G.ASSET_ATLAS[brainstormed.old_name].image, G.ASSET_ATLAS[brainstormed.new_name].px, G.ASSET_ATLAS[brainstormed.new_name].py, f and G.ASSET_ATLAS[brainstormed.old_floating_name].image or nil, offset, h_scale)
     end
 
     return G.ASSET_ATLAS[brainstormed.new_name]
@@ -229,6 +244,17 @@ local function equal_sprites(first, second)
     return first.atlas.name == second.atlas.name and first.sprite_pos.x == second.sprite_pos.x and first.sprite_pos.y == second.sprite_pos.y
 end
 
+local function align_brainstorm(self, card)
+    if not self.brainstorm_T then
+        self.brainstorm_T = {h = self.T.h, w = self.T.w}
+    end
+
+    self.T.h = card.T.h
+    self.T.w = card.T.w
+    self.children.center.scale.y = card.children.center.scale.y
+
+    return self.T.h / self.brainstorm_T.h
+end
 
 local function align_sprite(self, card, restore)
     --if is_brainstorm(self) then return end -- this should never affect brainstorm
@@ -312,8 +338,9 @@ local function brainstorm_sprite(brainstorm, card)
         -- print(offset.x, offset.y)
     end
 
-    local needed_atlas = card.children.floating_sprite and brainstorm_atlas(card.children.center.atlas, card.children.floating_sprite.atlas, offset)
-                                                        or brainstorm_atlas(card.children.center.atlas, nil, nil)
+    local h_scale = align_brainstorm(brainstorm, card)
+    local needed_atlas = card.children.floating_sprite and brainstorm_atlas(card.children.center.atlas, card.children.floating_sprite.atlas, offset, h_scale)
+                                                        or brainstorm_atlas(card.children.center.atlas, nil, nil, h_scale)
     
     if brainstorm.children.center.atlas.name == needed_atlas.name and card.children.center.sprite_pos.x == brainstorm.children.center.sprite_pos.x and card.children.center.sprite_pos.y == brainstorm.children.center.sprite_pos.y then
         return
