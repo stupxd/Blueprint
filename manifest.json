@@ -5,7 +5,7 @@
   "author": ["stupxd aka stupid", "Jonathan"],
   "description": "Dynamically change Blueprint & Brainstorm textures.",
   "prefix": "blue",
-  "main_file": "mod.lua",
+  "main_file": "smods.lua",
   "badge_colour": "4B69CF",
   "badge_text_colour": "FFFFFF",
   "priority": 69,
