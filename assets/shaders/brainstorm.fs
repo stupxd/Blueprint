@@ -38,7 +38,10 @@ float gaussian_blur(Image jokers_sampler, ivec2 texture_coords) {
             if (blur_amount == 0)
                 factor = 1.0;
             else {
-                factor = exp(-dot(offset, offset) / float(blur_amount * blur_amount));
+                // dot() only supports genFType in GLSL ES (mobile/handheld devices)
+                // factor = exp(-dot(offset, offset) / float(blur_amount * blur_amount));
+                // changed to calculate dot product manually
+                factor = exp( -float(offset.x * offset.x + offset.y * offset.y) / float(blur_amount * blur_amount) );
             }
             col += greyscale(myTexelFetch(jokers_sampler, texture_coords + offset)) * factor;
             total += factor;
@@ -48,32 +51,48 @@ float gaussian_blur(Image jokers_sampler, ivec2 texture_coords) {
 	return col;
 }
 
-#define sobel_kernel_length 6
+// #define sobel_kernel_length 6
 
-vec3 sobel_kernelx[sobel_kernel_length] = vec3[sobel_kernel_length] (
-    vec3(-1, -1, -1),
-    vec3(-1, 0, -2),
-    vec3(-1, 1, -1),
-    vec3(1, -1, 1),
-    vec3(1, 0, 2),
-    vec3(1, 1, 1)
-);
+// vec3 sobel_kernelx[sobel_kernel_length] = vec3[sobel_kernel_length] (
+//     vec3(-1, -1, -1),
+//     vec3(-1, 0, -2),
+//     vec3(-1, 1, -1),
+//     vec3(1, -1, 1),
+//     vec3(1, 0, 2),
+//     vec3(1, 1, 1)
+// );
 
-vec3 sobel_kernely[sobel_kernel_length] = vec3[sobel_kernel_length] (
-    vec3(-1, -1, -1),
-    vec3(0, -1, -2),
-    vec3(1, -1, -1),
-    vec3(-1, 1, 1),
-    vec3(0, 1, 2),
-    vec3(1, 1, 1)
-);
+// vec3 sobel_kernely[sobel_kernel_length] = vec3[sobel_kernel_length] (
+//     vec3(-1, -1, -1),
+//     vec3(0, -1, -2),
+//     vec3(1, -1, -1),
+//     vec3(-1, 1, 1),
+//     vec3(0, 1, 2),
+//     vec3(1, 1, 1)
+// );
 
 vec2 sobel_filter(Image jokers_sampler, ivec2 texture_coords) {
     vec2 d = vec2(0);
-    for (int i = 0; i < sobel_kernel_length; i++) {
-        d.x += gaussian_blur(jokers_sampler, texture_coords + ivec2(sobel_kernelx[i].xy)) * sobel_kernelx[i].z;
-        d.y += gaussian_blur(jokers_sampler, texture_coords + ivec2(sobel_kernely[i].xy)) * sobel_kernely[i].z;
-    }
+    // for (int i = 0; i < sobel_kernel_length; i++) {
+    //     d.x += gaussian_blur(jokers_sampler, texture_coords + ivec2(sobel_kernelx[i].xy)) * sobel_kernelx[i].z;
+    //     d.y += gaussian_blur(jokers_sampler, texture_coords + ivec2(sobel_kernely[i].xy)) * sobel_kernely[i].z;
+    // }
+
+    // commented sobel filter implementation above, but without vector arrays (GLSL ES)
+    d.x += gaussian_blur(jokers_sampler, texture_coords + ivec2(-1, -1)) * -1.0;
+    d.x += gaussian_blur(jokers_sampler, texture_coords + ivec2(-1,  0)) * -2.0;
+    d.x += gaussian_blur(jokers_sampler, texture_coords + ivec2(-1,  1)) * -1.0;
+    d.x += gaussian_blur(jokers_sampler, texture_coords + ivec2( 1, -1)) *  1.0;
+    d.x += gaussian_blur(jokers_sampler, texture_coords + ivec2( 1,  0)) *  2.0;
+    d.x += gaussian_blur(jokers_sampler, texture_coords + ivec2( 1,  1)) *  1.0;
+
+    d.y += gaussian_blur(jokers_sampler, texture_coords + ivec2(-1, -1)) * -1.0;
+    d.y += gaussian_blur(jokers_sampler, texture_coords + ivec2( 0, -1)) * -2.0;
+    d.y += gaussian_blur(jokers_sampler, texture_coords + ivec2( 1, -1)) * -1.0;
+    d.y += gaussian_blur(jokers_sampler, texture_coords + ivec2(-1,  1)) *  1.0;
+    d.y += gaussian_blur(jokers_sampler, texture_coords + ivec2( 0,  1)) *  2.0;
+    d.y += gaussian_blur(jokers_sampler, texture_coords + ivec2( 1,  1)) *  1.0;
+
     return d;
 }
 
@@ -115,7 +134,7 @@ float canny_edges(Image jokers_sampler, ivec2 texture_coords) {
     }
 }
 
-float hash12(vec2 p)
+float hash12(ivec2 p)
 {
 	vec3 p3  = fract(vec3(p.xyx) * .1031);
     p3 += dot(p3, p3.yzx + 33.33);
@@ -148,6 +167,11 @@ vec4 mapcol(float v, ivec2 coords) {
 //     return false;
 // }
 
+// mod() but for integer !crazy (GLSL ES)
+int imod(int x, int y) {
+    return x - y * (x/y);
+}
+
 vec4 effect( vec4 colour, Image jokers_sampler, vec2 texture_coords, vec2 screen_coords )
 {
     // float col = greyscale(texture(jokers_sampler, texture_coords));
@@ -161,10 +185,10 @@ vec4 effect( vec4 colour, Image jokers_sampler, vec2 texture_coords, vec2 screen
     // }
 
     vec4 cannycol = mapcol(canny, absolute_texture_coords);
-    if (mod(absolute_texture_coords.x, card_size.x) < margin.x || mod(absolute_texture_coords.x, card_size.x) >= card_size.x - margin.x) {
+    if (imod(absolute_texture_coords.x, card_size.x) < margin.x || imod(absolute_texture_coords.x, card_size.x) >= card_size.x - margin.x) {
         cannycol = vec4(0, 0, 0, 0);
     }
-    if (mod(absolute_texture_coords.y, card_size.y) < margin.y || mod(absolute_texture_coords.y, card_size.y) >= card_size.y - margin.y) {
+    if (imod(absolute_texture_coords.y, card_size.y) < margin.y || imod(absolute_texture_coords.y, card_size.y) >= card_size.y - margin.y) {
         cannycol = vec4(0, 0, 0, 0);
     }
     
