@@ -11,7 +11,7 @@ Blueprint.use_smods = function ()
 end
 
 
-Blueprint.find_self = function (target_filename)
+Blueprint.find_self = function (target_filename, target_filestart)
     local mods_path = lovely.mod_dir
 
 	local mod_folders = Blueprint.nfs.getDirectoryItems(mods_path)
@@ -21,13 +21,17 @@ Blueprint.find_self = function (target_filename)
 
         for _, filename in pairs(files) do
             if filename == target_filename then
-                return path
+                local file_text = Blueprint.nfs.read(path.."/"..filename)
+                local length = target_filestart and target_filestart:len() or 0
+                if length == 0 or file_text:sub(1, length) == target_filestart then
+                    return path
+                end
             end
         end
     end
 end
 
-Blueprint.path = Blueprint.find_self('blueprint.lua')
+Blueprint.path = Blueprint.find_self('blueprint.lua', "--- Blueprint mod start :D")
 assert(Blueprint.path, "Failed to find mod folder. Make sure that `Blueprint` folder has `blueprint.lua` file!")
 
 Blueprint.load_mod_file = function (path, name, as_txt)

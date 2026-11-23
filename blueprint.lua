@@ -1,3 +1,4 @@
+--- Blueprint mod start :D
 require 'blueprint.init'
 
 Blueprint.load_mod_file('internal/config.lua', 'internal.config')
